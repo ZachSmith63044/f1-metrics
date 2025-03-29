@@ -1,6 +1,7 @@
-.countText {
-    color: green;
+.formHead {
+    color: white;
     font-size: 40;
     font-weight: 700;
-    font-style: italic;
+    font-style: normal;
+    margin-bottom: "200px";
 }
