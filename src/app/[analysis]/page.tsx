@@ -40,8 +40,9 @@ export default function SessionSelection() {
 
 
           // use map instead
-          const choosableSessionsPages: any[] = [["Race"]];
-          const sessionPages = ["pitPerformance"];
+          const allSessions = ["Day 1", "Day 2", "Day 3", "Practice 1", "Practice 2", "Practice 3", "Sprint Shootout", "Sprint Qualifying", "Sprint", "Qualifying", "Race"]
+          const choosableSessionsPages: any[] = [["Race"], allSessions];
+          const sessionPages = ["pitPerformance", "speedsChart"];
           const choosableSessions: string[] = choosableSessionsPages[sessionPages.indexOf(basePath)];
 
           let yearsKeys = Object.keys(currentSessionsAvailable);

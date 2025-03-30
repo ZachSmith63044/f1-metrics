@@ -66,7 +66,7 @@ export default function Home() {
           url="https://firebasestorage.googleapis.com/v0/b/f1analysis-d2911.firebasestorage.app/o/Images%2FspeedBarChart.png?alt=media&token=5b5be6cb-1855-4f8c-9392-9c0d984e90a2"
           description="Analyse car performance at max speeds, min speeds and even throttle application"
           title="Speed Bar Charts"
-          pageLink=""
+          pageLink="/speedsChart"
           onClick={() => console.log("Track Map Clicked")}
         />
         <PageView 
