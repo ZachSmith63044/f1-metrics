@@ -1,7 +1,7 @@
 import React from "react";
-import { Button, Box, Typography } from "@mui/material";
-import { exo2, exo2Regular } from "../styles";
+import { Button, Box, Typography, Skeleton } from "@mui/material";
 import Link from "next/link";
+import { useState } from "react";
 
 interface PageCardProps {
   url: string;
@@ -12,6 +12,8 @@ interface PageCardProps {
 }
 
 const PageCard: React.FC<PageCardProps> = ({ url, description, title, pageLink, onClick }) => {
+  const [isLoaded, setIsLoaded] = useState(false);
+
   return (
     <Button
       onClick={onClick}
@@ -40,10 +42,26 @@ const PageCard: React.FC<PageCardProps> = ({ url, description, title, pageLink, 
           width: "100%",
         }}
       >
+        {!isLoaded && (
+          <Skeleton
+            variant="rectangular"
+            width="100%"
+            height={260}
+            animation="wave"
+            sx={{ bgcolor: "#333" }} // Darker shade for dark theme
+          />
+        )}
         <img
           src={url}
           alt={title}
-          style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }}
+          style={{
+            maxWidth: "100%",
+            maxHeight: "100%",
+            objectFit: "contain",
+            display: isLoaded ? "block" : "none", // Hide until loaded
+          }}
+          onLoad={() => setIsLoaded(true)}
+          onError={() => setIsLoaded(true)} // Handle error case (optional)
         />
       </Box>
 
@@ -58,7 +76,7 @@ const PageCard: React.FC<PageCardProps> = ({ url, description, title, pageLink, 
           alignItems: "center", // Centers text vertically
         }}
       >
-        <Typography sx={{ fontSize: "14px", color: "#CCCCCC", textAlign: "left", fontFamily: exo2Regular.style.fontFamily }}>{description}</Typography>
+        <Typography sx={{ fontSize: "14px", color: "#CCCCCC", textAlign: "left" }}>{description}</Typography>
       </Box>
 
       {/* Title Section */}
@@ -71,7 +89,7 @@ const PageCard: React.FC<PageCardProps> = ({ url, description, title, pageLink, 
           textAlign: "center",
         }}
       >
-        <Typography sx={{ fontSize: "18px", fontWeight: "bold", color: "white", fontFamily: exo2.style.fontFamily }}>{title}</Typography>
+        <Typography sx={{ fontSize: "18px", fontWeight: "bold", color: "white" }}>{title}</Typography>
       </Box>
     </Button>
   );

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, Cell, LabelList, ReferenceLine } from "recharts";
-import { Box, Typography, ThemeProvider, CssBaseline, ToggleButtonGroup, ToggleButton } from "@mui/material";
+import { Box, Typography, ThemeProvider, CssBaseline, ToggleButtonGroup, ToggleButton, Stack, LinearProgress } from "@mui/material";
 import { LapData } from "../../../../classes/lapData";
 import { DriverData } from "../../../../classes/driverData";
 import { exo2, exo2Regular } from "../../../../styles";
@@ -321,67 +321,85 @@ const SpeedsChart = () => {
                     </ToggleButtonGroup>
                 </Box>
                 <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                    data={
-                        dataType === "drivers" ? chartType === "min" ? minSpeedDrivers : chartType === "max" ? maxSpeedDrivers : throttleDrivers : chartType === "min" ? minSpeedTeams : chartType === "max" ? maxSpeedTeams : throttleTeams
-                    }
-                    margin={{ top: 10, right: 20, left: 20, bottom: 5 }}
-                >
-                    <CartesianGrid strokeDasharray="6 6" vertical={false} />
-                    <XAxis
-                        dataKey="team"
-                        fontFamily={exo2.style.fontFamily}
-                        fontSize={16}
-                        fontWeight="600"
-                        style={{ fill: "#E2E2E2" }}
-                        tickCount={0}
-                    />
-                    <YAxis
-                        fontFamily={exo2.style.fontFamily}
-                        fontSize={18}
-                        fontWeight="500"
-                        style={{ fill: "#E2E2E2" }}
-                        label={{
-                            value: "Min speed during fastest lap (kph)",
-                            angle: -90,
-                            position: "insideLeft",
-                            style: { fontFamily: exo2.style.fontFamily, fontWeight: "600" },
-                            fill: "#E2E2E2",
-                            dy: 70,
-                        }}
-                        domain={[
-                            Math.floor(
-                                (dataType === "drivers" ? chartType === "min" ? minSpeedDriverBounds : chartType === "max" ? maxSpeedDriverBounds : throttleDriverBounds : chartType === "min" ? minSpeedTeamBounds : chartType === "max" ? maxSpeedTeamBounds : throttleTeamBounds).minY
-                            ),
-                            Math.ceil(
-                                (dataType === "drivers" ? chartType === "min" ? minSpeedDriverBounds : chartType === "max" ? maxSpeedDriverBounds : throttleDriverBounds : chartType === "min" ? minSpeedTeamBounds : chartType === "max" ? maxSpeedTeamBounds : throttleTeamBounds).maxY
-                            ),
-                        ]}
-                        ticks={(() => {
-                            const bounds = dataType === "drivers" ? chartType === "min" ? minSpeedDriverBounds : chartType === "max" ? maxSpeedDriverBounds : throttleDriverBounds : chartType === "min" ? minSpeedTeamBounds : chartType === "max" ? maxSpeedTeamBounds : throttleTeamBounds;
-                            const min = Math.floor(bounds.minY);
-                            const max = Math.ceil(bounds.maxY);
-                            const tickArray = [];
-                            for (let i = min; i <= max; i++) {
-                                tickArray.push(i);
+                    {
+                        minSpeedDrivers.length == 0 ? (
+                            <Stack
+                                spacing={3}
+                                alignItems="center"
+                                justifyContent="center"
+                                sx={{ minHeight: "80vh" }} // Full height minus Navbar for centering
+                                >
+                                <Box sx={{ width: '30%' }}>
+                                    <LinearProgress color="inherit" />
+                                </Box>
+                                <Typography variant="h6" fontWeight="500" sx={{ color: "#E3E3E3" }}>
+                                    Loading Data...
+                                </Typography>
+                            </Stack>
+                        )
+                        :
+                        <BarChart
+                            data={
+                                dataType === "drivers" ? chartType === "min" ? minSpeedDrivers : chartType === "max" ? maxSpeedDrivers : throttleDrivers : chartType === "min" ? minSpeedTeams : chartType === "max" ? maxSpeedTeams : throttleTeams
                             }
-                            return tickArray;
-                        })()}
-                        interval={0}
-                        tickFormatter={(value) => value.toFixed(0)}
-                    />
-                    <Bar dataKey="value" radius={[14, 14, 0, 0]}>
-                        {(dataType === "drivers" ? chartType === "min" ? minSpeedDrivers : chartType === "max" ? maxSpeedDrivers : throttleDrivers : chartType === "min" ? minSpeedTeams : chartType === "max" ? maxSpeedTeams : throttleTeams).map((entry, index) => (<Cell key={`cell-${index}`} fill={entry.color} />))}
-                        <LabelList
-                            dataKey="value"
-                            position="top"
-                            formatter={(value: number) => chartType == "throttle" ? value.toFixed(1) + "%" : value.toFixed(0)}
-                            fontFamily={exo2Regular.style.fontFamily}
-                            fontWeight="600"
-                            fontSize={24}
-                        />
-                    </Bar>
-                </BarChart>
+                            margin={{ top: 10, right: 20, left: 20, bottom: 5 }}
+                        >
+                            <CartesianGrid strokeDasharray="6 6" vertical={false} />
+                            <XAxis
+                                dataKey="team"
+                                fontFamily={exo2.style.fontFamily}
+                                fontSize={16}
+                                fontWeight="600"
+                                style={{ fill: "#E2E2E2" }}
+                                tickCount={0}
+                            />
+                            <YAxis
+                                fontFamily={exo2.style.fontFamily}
+                                fontSize={18}
+                                fontWeight="500"
+                                style={{ fill: "#E2E2E2" }}
+                                label={{
+                                    value: "Min speed during fastest lap (kph)",
+                                    angle: -90,
+                                    position: "insideLeft",
+                                    style: { fontFamily: exo2.style.fontFamily, fontWeight: "600" },
+                                    fill: "#E2E2E2",
+                                    dy: 70,
+                                }}
+                                domain={[
+                                    Math.floor(
+                                        (dataType === "drivers" ? chartType === "min" ? minSpeedDriverBounds : chartType === "max" ? maxSpeedDriverBounds : throttleDriverBounds : chartType === "min" ? minSpeedTeamBounds : chartType === "max" ? maxSpeedTeamBounds : throttleTeamBounds).minY
+                                    ),
+                                    Math.ceil(
+                                        (dataType === "drivers" ? chartType === "min" ? minSpeedDriverBounds : chartType === "max" ? maxSpeedDriverBounds : throttleDriverBounds : chartType === "min" ? minSpeedTeamBounds : chartType === "max" ? maxSpeedTeamBounds : throttleTeamBounds).maxY
+                                    ),
+                                ]}
+                                ticks={(() => {
+                                    const bounds = dataType === "drivers" ? chartType === "min" ? minSpeedDriverBounds : chartType === "max" ? maxSpeedDriverBounds : throttleDriverBounds : chartType === "min" ? minSpeedTeamBounds : chartType === "max" ? maxSpeedTeamBounds : throttleTeamBounds;
+                                    const min = Math.floor(bounds.minY);
+                                    const max = Math.ceil(bounds.maxY);
+                                    const tickArray = [];
+                                    for (let i = min; i <= max; i++) {
+                                        tickArray.push(i);
+                                    }
+                                    return tickArray;
+                                })()}
+                                interval={0}
+                                tickFormatter={(value) => value.toFixed(0)}
+                            />
+                            <Bar dataKey="value" radius={[14, 14, 0, 0]}>
+                                {(dataType === "drivers" ? chartType === "min" ? minSpeedDrivers : chartType === "max" ? maxSpeedDrivers : throttleDrivers : chartType === "min" ? minSpeedTeams : chartType === "max" ? maxSpeedTeams : throttleTeams).map((entry, index) => (<Cell key={`cell-${index}`} fill={entry.color} />))}
+                                <LabelList
+                                    dataKey="value"
+                                    position="top"
+                                    formatter={(value: number) => chartType == "throttle" ? value.toFixed(1) + "%" : value.toFixed(0)}
+                                    fontFamily={exo2Regular.style.fontFamily}
+                                    fontWeight="600"
+                                    fontSize={24}
+                                />
+                            </Bar>
+                        </BarChart>
+                    }
                 </ResponsiveContainer>
             </Box>
         </ThemeProvider>

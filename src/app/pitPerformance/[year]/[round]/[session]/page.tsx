@@ -2,16 +2,10 @@
 
 import React, { useState, useEffect } from "react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, Cell, LabelList, ReferenceLine } from "recharts";
-import { Box, Color, colors, Typography, ThemeProvider, CssBaseline, ToggleButtonGroup, ToggleButton } from "@mui/material";
-import { storage } from "../../../../firebaseConfig";
-import { ref, listAll, getDownloadURL } from "firebase/storage";
-import { json } from "stream/consumers";
-import { LapData } from "../../../../classes/lapData";
-import { DriverData } from "../../../../classes/driverData";
+import { Box, Typography, ThemeProvider, CssBaseline, ToggleButtonGroup, ToggleButton, Stack, LinearProgress } from "@mui/material";
 import { exo2, exo2Regular } from "../../../../styles";
 import darkTheme from "../../../../theme";
 import Navbar from "../../../../components/Navbar";
-import PageView from "../../../../components/PageView";
 import { fetchSessionData } from "../../../../utils/fetchSessionData";
 import { useParams } from "next/navigation";
 
@@ -211,57 +205,75 @@ const PitPerformanceChart = () => {
                     <ToggleButton value="drivers">Drivers</ToggleButton>
                 </ToggleButtonGroup>
                 <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                        data={dataType === "teams" ? teamsData : driverData}
-                        margin={{ top: 10, right: 20, left: 20, bottom: 5 }}
-                    >
-                        <CartesianGrid strokeDasharray="6 6" vertical={false} />
-                        <XAxis
-                            dataKey="team"
-                            fontFamily={exo2.style.fontFamily}
-                            fontSize={16}
-                            fontWeight="600"
-                            style={{ fill: "#E2E2E2" }}
-                            tickCount={0}
-                        />
-                        <YAxis
-                            fontFamily={exo2.style.fontFamily}
-                            fontSize={18}
-                            fontWeight="500"
-                            style={{ fill: "#E2E2E2" }}
-                            label={{
-                                value: "Average Pit Stop Time (s)",
-                                angle: -90,
-                                position: "insideLeft",
-                                style: { fontFamily: exo2.style.fontFamily, fontWeight: "600" },
-                                fill: "#E2E2E2",
-                                dy: 70,
-                            }}
-                            domain={[
-                                (dataType === "teams" ? teamsBounds : driverBounds).minY,
-                                (dataType === "teams" ? teamsBounds : driverBounds).maxY,
-                            ]}
-                            tickCount={Math.ceil(
-                                (dataType === "teams" ? teamsBounds : driverBounds).maxY -
-                                (dataType === "teams" ? teamsBounds : driverBounds).minY
-                            ) + 1}
-                            interval={0}
-                            tickFormatter={(value) => value.toFixed(0)}
-                        />
-                        <Bar dataKey="pitTime" radius={[14, 14, 0, 0]}>
-                            {(dataType === "teams" ? teamsData : driverData).map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={entry.color} />
-                            ))}
-                            <LabelList
-                                dataKey="pitTime"
-                                position="top"
-                                formatter={(value: number) => value.toFixed(2)}
-                                fontFamily={exo2Regular.style.fontFamily}
+                    {
+                        driverData.length == 0 ? (
+                            <Stack
+                                spacing={3}
+                                alignItems="center"
+                                justifyContent="center"
+                                sx={{ minHeight: "80vh" }} // Full height minus Navbar for centering
+                                >
+                                <Box sx={{ width: '30%' }}>
+                                    <LinearProgress color="inherit" />
+                                </Box>
+                                <Typography variant="h6" fontWeight="500" sx={{ color: "#E3E3E3" }}>
+                                    Loading Data...
+                                </Typography>
+                            </Stack>
+                        )
+                        :
+                        <BarChart
+                            data={dataType === "teams" ? teamsData : driverData}
+                            margin={{ top: 10, right: 20, left: 20, bottom: 5 }}
+                        >
+                            <CartesianGrid strokeDasharray="6 6" vertical={false} />
+                            <XAxis
+                                dataKey="team"
+                                fontFamily={exo2.style.fontFamily}
+                                fontSize={16}
                                 fontWeight="600"
-                                fontSize={20}
+                                style={{ fill: "#E2E2E2" }}
+                                tickCount={0}
                             />
-                        </Bar>
-                    </BarChart>
+                            <YAxis
+                                fontFamily={exo2.style.fontFamily}
+                                fontSize={18}
+                                fontWeight="500"
+                                style={{ fill: "#E2E2E2" }}
+                                label={{
+                                    value: "Average Pit Stop Time (s)",
+                                    angle: -90,
+                                    position: "insideLeft",
+                                    style: { fontFamily: exo2.style.fontFamily, fontWeight: "600" },
+                                    fill: "#E2E2E2",
+                                    dy: 70,
+                                }}
+                                domain={[
+                                    (dataType === "teams" ? teamsBounds : driverBounds).minY,
+                                    (dataType === "teams" ? teamsBounds : driverBounds).maxY,
+                                ]}
+                                tickCount={Math.ceil(
+                                    (dataType === "teams" ? teamsBounds : driverBounds).maxY -
+                                    (dataType === "teams" ? teamsBounds : driverBounds).minY
+                                ) + 1}
+                                interval={0}
+                                tickFormatter={(value) => value.toFixed(0)}
+                            />
+                            <Bar dataKey="pitTime" radius={[14, 14, 0, 0]}>
+                                {(dataType === "teams" ? teamsData : driverData).map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={entry.color} />
+                                ))}
+                                <LabelList
+                                    dataKey="pitTime"
+                                    position="top"
+                                    formatter={(value: number) => value.toFixed(2)}
+                                    fontFamily={exo2Regular.style.fontFamily}
+                                    fontWeight="600"
+                                    fontSize={20}
+                                />
+                            </Bar>
+                        </BarChart>
+                    }
                 </ResponsiveContainer>
             </Box>
         </ThemeProvider>

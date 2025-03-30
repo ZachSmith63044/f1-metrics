@@ -59,7 +59,7 @@ export default function Home() {
           url="https://firebasestorage.googleapis.com/v0/b/f1analysis-d2911.firebasestorage.app/o/Images%2FlapTimeView.png?alt=media&token=72d06d3f-1552-4914-a416-c9f611aafcfb"
           description="View and analyse each drivers lap times throughout any session"
           title="Lap Time Chart"
-          pageLink=""
+          pageLink="/lapTimesChart"
           onClick={() => console.log("Track Map Clicked")}
         />
         <PageView 

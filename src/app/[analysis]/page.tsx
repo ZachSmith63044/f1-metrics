@@ -2,7 +2,7 @@
 
 import { useState, useEffect, SetStateAction } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { Button, Stack, TextField, Typography, ThemeProvider, CssBaseline, MenuItem, Select, FormControl, InputLabel } from "@mui/material";
+import { Button, Stack, TextField, Typography, ThemeProvider, CssBaseline, MenuItem, Select, FormControl, InputLabel, CircularProgress } from "@mui/material";
 import darkTheme from "../theme";
 import Navbar from "../components/Navbar";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
@@ -20,9 +20,9 @@ export default function SessionSelection() {
   const basePath = pathname.split("/")[1]; // Extract analysis type (e.g., "pitPerformance")
 
   
-  const [year, setYear] = useState("2025");
-  const [round, setRound] = useState("01) Australian Grand Prix");
-  const [session, setSession] = useState("Race");
+  const [year, setYear] = useState("Loading...");
+  const [round, setRound] = useState("Loading...");
+  const [session, setSession] = useState("Loading...");
 
   const [availableSessions, setAvailableSessions] = useState<SessionsData>({"Loading...": {"Loading...": ["Loading..."]}});
 
@@ -36,13 +36,13 @@ export default function SessionSelection() {
 
         if (docSnap.exists()) {
 
-          let currentSessionsAvailable = docSnap.data() as SessionsData
+          let currentSessionsAvailable = docSnap.data() as SessionsData;
 
 
           // use map instead
-          const allSessions = ["Day 1", "Day 2", "Day 3", "Practice 1", "Practice 2", "Practice 3", "Sprint Shootout", "Sprint Qualifying", "Sprint", "Qualifying", "Race"]
-          const choosableSessionsPages: any[] = [["Race"], allSessions];
-          const sessionPages = ["pitPerformance", "speedsChart"];
+          const allSessions = ["Day 1", "Day 2", "Day 3", "Practice 1", "Practice 2", "Practice 3", "Sprint Shootout", "Sprint Qualifying", "Sprint", "Qualifying", "Race"];
+          const choosableSessionsPages: any[] = [["Race"], allSessions, allSessions];
+          const sessionPages = ["pitPerformance", "speedsChart", "lapTimesChart"];
           const choosableSessions: string[] = choosableSessionsPages[sessionPages.indexOf(basePath)];
 
           let yearsKeys = Object.keys(currentSessionsAvailable);
@@ -128,7 +128,7 @@ export default function SessionSelection() {
   const changeRound = (round: string) => {
     setRound(round);
     const sessions = availableSessions[year][round]
-      ? availableSessions[year][round].sort() 
+      ? availableSessions[year][round]
       : [];
   
     if (sessions.length > 0) {
@@ -141,56 +141,71 @@ export default function SessionSelection() {
 
   return (
     <ThemeProvider theme={darkTheme}>
-        <CssBaseline />
-        <Navbar/>
+      <CssBaseline />
+      <Navbar />
+      {availableSessions && Object.keys(availableSessions).length === 1 && Object.keys(availableSessions)[0] === "Loading..." ? (
+        <Stack
+          spacing={3}
+          alignItems="center"
+          justifyContent="center"
+          sx={{ minHeight: "80vh" }} // Full height minus Navbar for centering
+        >
+          <CircularProgress size={60} sx={{ color: "#E3E3E3" }} /> {/* Adjust size and color */}
+          <Typography variant="h6" fontWeight="500" sx={{ color: "#E3E3E3" }}>
+            Loading Sessions...
+          </Typography>
+        </Stack>
+      ) : (
         <Stack spacing={3} alignItems="center" mt={5}>
+          <Typography variant="h4" fontWeight="600">
+            Select a Race Session
+          </Typography>
 
-        <Typography variant="h4" fontWeight="600">Select a Race Session</Typography>
+          {/* Year Dropdown */}
+          <FormControl sx={{ width: 250 }} variant="outlined">
+            <InputLabel shrink>Year</InputLabel>
+            <Select value={year} onChange={(e) => changeYear(e.target.value)} label="Year">
+              {availableSessions && Object.keys(availableSessions).sort().map((yr) => (
+                <MenuItem key={yr} value={yr}>{yr}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
 
-        {/* Year Dropdown */}
-        <FormControl sx={{ width: 250 }} variant="outlined">
-          <InputLabel shrink>Year</InputLabel>
-          <Select
-            value={year}
-            onChange={(e) => changeYear(e.target.value)}
-            label="Year"
-          >
-            {Object.keys(availableSessions).sort().map((yr) => (
-              <MenuItem key={yr} value={yr}>{yr}</MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-
-        {/* Round Dropdown */}
-        <FormControl sx={{ width: 250 }} variant="outlined">
+          {/* Round Dropdown */}
+          <FormControl sx={{ width: 250 }} variant="outlined">
             <InputLabel shrink>Round</InputLabel>
             <Select value={round} onChange={(e) => changeRound(e.target.value)} label="Round">
-            {Object.keys(availableSessions[year]).sort().map((rd) => (
-                <MenuItem key={rd} value={rd}>{rd}</MenuItem>
-            ))}
+              {availableSessions && availableSessions[year] ? (
+                Object.keys(availableSessions[year]).sort().map((rd) => (
+                  <MenuItem key={rd} value={rd}>{rd}</MenuItem>
+                ))
+              ) : (
+                <MenuItem disabled>No Rounds Available</MenuItem>
+              )}
             </Select>
-        </FormControl>
+          </FormControl>
 
-        {/* Session Dropdown */}
-        <FormControl sx={{ width: 250 }} variant="outlined">
+          {/* Session Dropdown */}
+          <FormControl sx={{ width: 250 }} variant="outlined">
             <InputLabel shrink>Session</InputLabel>
             <Select label="Session" value={session} onChange={(e) => setSession(e.target.value)}>
-              {availableSessions[year] && availableSessions[year][round] 
-                ? [...availableSessions[year][round]].map((sess, index) => (
-                    <MenuItem key={`${year}-${round}-${index}`} value={sess}>
-                      {sess}
-                    </MenuItem>
-                  ))
-                : <MenuItem disabled>No Sessions Available</MenuItem>
-              }
+              {availableSessions && availableSessions[year] && availableSessions[year][round] ? (
+                [...availableSessions[year][round]].map((sess, index) => (
+                  <MenuItem key={`${year}-${round}-${index}`} value={sess}>
+                    {sess}
+                  </MenuItem>
+                ))
+              ) : (
+                <MenuItem disabled>No Sessions Available</MenuItem>
+              )}
             </Select>
-        </FormControl>
+          </FormControl>
 
-        <Button variant="contained" color="primary" onClick={handleGoToSession}>
+          <Button variant="contained" color="primary" onClick={handleGoToSession}>
             Go to Session
-        </Button>
-
+          </Button>
         </Stack>
+      )}
     </ThemeProvider>
   );
 }
