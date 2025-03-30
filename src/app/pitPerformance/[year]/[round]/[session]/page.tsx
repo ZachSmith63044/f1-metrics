@@ -37,8 +37,8 @@ const PitPerformanceChart = () => {
 
     const params = useParams();
     const year = params.year as string;
-    const round = decodeURIComponent(params.round as string ?? "02) Chinese Grand Prix");
-    const session = params.session as string;
+    const round = decodeURIComponent(params.round as string);
+    const session = decodeURIComponent(params.session as string);
 
     const [dataType, setDataType] = useState<"teams" | "drivers">("teams");
 

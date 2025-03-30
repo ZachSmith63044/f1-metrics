@@ -4,7 +4,7 @@ import { useState } from "react";
 //import styles from "./Home.module.css";
 import darkTheme from "./theme";
 import { exo2, exo2Regular } from "./styles";
-import { TextField, Button, CssBaseline, ThemeProvider, Stack, Typography } from "@mui/material";
+import { CssBaseline, ThemeProvider, Stack, Typography } from "@mui/material";
 
 
 
@@ -63,7 +63,7 @@ export default function Home() {
           onClick={() => console.log("Track Map Clicked")}
         />
         <PageView 
-          url="https://firebasestorage.googleapis.com/v0/b/f1analysis-d2911.firebasestorage.app/o/Images%2FspeedBarChart.png?alt=media&token=5b5be6cb-1855-4f8c-9392-9c0d984e90a2"
+          url="https://firebasestorage.googleapis.com/v0/b/f1analysis-d2911.firebasestorage.app/o/Images%2FSpeedCharts.jpg?alt=media&token=e762fec9-d7c0-4355-a73d-20ad2ca0f3b2"
           description="Analyse car performance at max speeds, min speeds and even throttle application"
           title="Speed Bar Charts"
           pageLink="/speedsChart"

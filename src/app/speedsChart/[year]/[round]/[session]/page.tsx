@@ -2,16 +2,12 @@
 
 import React, { useState, useEffect } from "react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, Cell, LabelList, ReferenceLine } from "recharts";
-import { Box, Color, colors, Typography, ThemeProvider, CssBaseline, ToggleButtonGroup, ToggleButton } from "@mui/material";
-import { storage } from "../../../../firebaseConfig";
-import { ref, listAll, getDownloadURL } from "firebase/storage";
-import { json } from "stream/consumers";
+import { Box, Typography, ThemeProvider, CssBaseline, ToggleButtonGroup, ToggleButton } from "@mui/material";
 import { LapData } from "../../../../classes/lapData";
 import { DriverData } from "../../../../classes/driverData";
 import { exo2, exo2Regular } from "../../../../styles";
 import darkTheme from "../../../../theme";
 import Navbar from "../../../../components/Navbar";
-import PageView from "../../../../components/PageView";
 import { fetchSessionData } from "../../../../utils/fetchSessionData";
 import { useParams } from "next/navigation";
 
@@ -46,7 +42,7 @@ const SpeedsChart = () => {
 
     const params = useParams();
     const year = params.year as string;
-    const round = decodeURIComponent(params.round as string ?? "02) Chinese Grand Prix");
+    const round = decodeURIComponent(params.round as string);
     const session = decodeURIComponent(params.session as string);
 
     const [dataType, setDataType] = useState<"teams" | "drivers">("teams");

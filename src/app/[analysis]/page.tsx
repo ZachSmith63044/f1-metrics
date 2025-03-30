@@ -24,7 +24,7 @@ export default function SessionSelection() {
   const [round, setRound] = useState("01) Australian Grand Prix");
   const [session, setSession] = useState("Race");
 
-  const [availableSessions, setAvailableSessions] = useState<SessionsData>({"2025": {"01) Australian Grand Prix": ["Practice 1", "Practice 2", "Practice 3", "Qualifying", "Race"]}});
+  const [availableSessions, setAvailableSessions] = useState<SessionsData>({"Loading...": {"Loading...": ["Loading..."]}});
 
   // let availableSessions: SessionsData = ;
 
