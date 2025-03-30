@@ -35,18 +35,44 @@ export default function SessionSelection() {
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
-          setAvailableSessions(docSnap.data() as SessionsData);
+
+          let currentSessionsAvailable = docSnap.data() as SessionsData
+
+
+          // use map instead
+          const choosableSessionsPages: any[] = [["Race"]];
+          const sessionPages = ["pitPerformance"];
+          const choosableSessions: string[] = choosableSessionsPages[sessionPages.indexOf(basePath)];
+
+          let yearsKeys = Object.keys(currentSessionsAvailable);
+          for (let i = 0; i < yearsKeys.length; i++)
+          {
+            let roundKeys = Object.keys(currentSessionsAvailable[yearsKeys[i]]);
+            for (let j = 0; j < roundKeys.length; j++)
+            {
+              let sessions: string[] = currentSessionsAvailable[yearsKeys[i]][roundKeys[j]].slice();
+              for (let k = sessions.length - 1; k > -1; k--)
+              {
+                if (!choosableSessions.includes(sessions[k]))
+                {
+                  sessions.splice(k, 1);
+                }
+              }
+              if (sessions.length > 0)
+              {
+                currentSessionsAvailable[yearsKeys[i]][roundKeys[j]] = sessions;
+              }
+              console.log(sessions);
+            }
+          }
+
+          console.log(choosableSessions);
+
+          setAvailableSessions(currentSessionsAvailable);
 
           const years = Object.keys(availableSessions);
           const cYear = years.at(-1) ?? "2025";
           changeYear(cYear);
-          // setYear(cYear);
-          // const rounds = Object.keys(availableSessions[cYear]);
-          // const cRound = rounds.at(-1) ?? "01) Australian Grand Prix";
-          // setRound(cRound);
-          // const sessions = availableSessions[cYear][cRound];
-          // const cSession = sessions.at(-1) ?? "Practice 1";
-          // setSession(cSession);
         } else {
           console.log("No such document!");
         }
@@ -75,18 +101,16 @@ export default function SessionSelection() {
   const changeYear = (year: string) => {
     setYear(year);
   
-    // Get sorted rounds
     const rounds = availableSessions[year] 
       ? Object.keys(availableSessions[year]).sort() 
       : [];
   
     if (rounds.length > 0) {
-      const firstRound = rounds[rounds.length - 1]; // First available round
-      setRound(firstRound);
+      const lastRound = rounds[rounds.length - 1];
+      setRound(lastRound);
   
-      // Get sorted sessions
-      const sessions = availableSessions[year][firstRound] 
-        ? [...availableSessions[year][firstRound]]
+      const sessions = availableSessions[year][lastRound] 
+        ? [...availableSessions[year][lastRound]]
         : [];
   
       if (sessions.length > 0) {
@@ -96,6 +120,20 @@ export default function SessionSelection() {
       }
     } else {
       setRound("");
+      setSession("");
+    }
+  };
+
+  const changeRound = (round: string) => {
+    setRound(round);
+    const sessions = availableSessions[year][round]
+      ? availableSessions[year][round].sort() 
+      : [];
+  
+    if (sessions.length > 0) {
+      const lastSession = sessions[sessions.length - 1];
+      setSession(lastSession);
+    } else {
       setSession("");
     }
   };
@@ -125,7 +163,7 @@ export default function SessionSelection() {
         {/* Round Dropdown */}
         <FormControl sx={{ width: 250 }} variant="outlined">
             <InputLabel shrink>Round</InputLabel>
-            <Select value={round} onChange={(e) => setRound(e.target.value)} label="Round">
+            <Select value={round} onChange={(e) => changeRound(e.target.value)} label="Round">
             {Object.keys(availableSessions[year]).sort().map((rd) => (
                 <MenuItem key={rd} value={rd}>{rd}</MenuItem>
             ))}

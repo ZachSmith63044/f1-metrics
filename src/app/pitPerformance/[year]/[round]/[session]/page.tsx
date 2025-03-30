@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, Cell, LabelList, ReferenceLine } from "recharts";
-import { Box, Color, colors, Typography, ThemeProvider, CssBaseline } from "@mui/material";
+import { Box, Color, colors, Typography, ThemeProvider, CssBaseline, ToggleButtonGroup, ToggleButton } from "@mui/material";
 import { storage } from "../../../../firebaseConfig"; // Import Firebase storage
 import { ref, listAll, getDownloadURL } from "firebase/storage";
 import { json } from "stream/consumers";
@@ -38,6 +38,12 @@ const PitPerformanceChart = () => {
     const year = params.year;
     const round = decodeURIComponent(params.round as string ?? "02) Chinese Grand Prix"); // Decode to handle special characters
     const session = params.session;
+
+    const [dataType, setDataType] = useState<"teams" | "drivers">("teams");
+
+    const handleDataChange = (_event: React.MouseEvent<HTMLElement>, newValue: "teams" | "drivers") => {
+        if (newValue !== null) setDataType(newValue);
+    };
 
     useEffect(() => {
       const fetchPitData = async () => {
@@ -154,7 +160,7 @@ const PitPerformanceChart = () => {
                     {
                         teamsPitPerformanceBounds.maxY = Math.ceil(pitTime + 1);
                     }
-                    teamsPitPerformance.push(new PitPerformance(teamsDataT[i].teamName.slice(0,3).toUpperCase(), teamsPitsTime[i]/teamsPitsCount[i], "#" + teamsDataT[i].teamColour)); // allDriverData[i].teamColour
+                    teamsPitPerformance.push(new PitPerformance(teamsDataT[i].teamName, teamsPitsTime[i]/teamsPitsCount[i], "#" + teamsDataT[i].teamColour)); // allDriverData[i].teamColour
                 
                 }
             }
@@ -194,74 +200,102 @@ const PitPerformanceChart = () => {
       fetchPitData();
     }, []);
 
-  return (
-    <ThemeProvider theme={darkTheme}>
-        <CssBaseline />
-        <Navbar />
-        <Box
-        // marginTop="20px"
-        sx={{
-            width: "99vw", // Full width of the viewport
-            height: "92vh", // Full height of the viewport
-            textAlign: "center",
-            padding: 2,
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center", // Center content vertically
-            alignItems: "center", // Center content horizontally
-        }}
-        >
-        <Typography variant="h4" gutterBottom sx={{ fontFamily: exo2.style.fontFamily, fontWeight: "700", letterSpacing: 1.2, fontSize: 42 }}>
-            Pit Stop Performance
-        </Typography>
-        <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={teamsData} margin={{ top: 20, right: 30, left: 20, bottom: 5 } } >
-                <CartesianGrid strokeDasharray="6 6" vertical={false}/>
-                <ReferenceLine x={teamsData.length - 1} stroke="#DDDDDD" strokeDasharray="3 3" />
-                <XAxis
-                    dataKey="team"
-                    fontFamily={exo2.style.fontFamily}
-                    fontSize={18}
-                    fontWeight="600"
-                    style={{ fill: '#EEEEEE' }}
-                    tickCount={0}
-                />
-                <YAxis
-                    fontFamily={exo2.style.fontFamily}
-                    fontSize={18}
-                    fontWeight="500"
-                    style={{ fill: '#EEEEEE' }}
-                    label={{ 
-                        value: "Average Pit Stop Time (s)", 
-                        angle: -90, 
-                        position: "insideLeft", 
-                        style: { fontFamily: exo2.style.fontFamily, fontWeight: "600" },
-                        fill: "#FFFFFF", // Sets the label color to white
-                        dy: 70  // Centers the label vertically
+    return (
+        <ThemeProvider theme={darkTheme}>
+            <CssBaseline />
+            <Navbar />
+            <Box
+                sx={{
+                    width: "100vw", // Full width of the viewport
+                    height: "calc(100vh - 64px)", // Full height minus Navbar (adjust 64px if Navbar height differs)
+                    textAlign: "center",
+                    padding: 1, // Reduced padding to fit more content
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "space-between", // Distribute space evenly
+                    alignItems: "center", // Center horizontally
+                    // overflow: "hidden", // Prevent scrolling
+                }}
+            >
+                <Typography
+                    variant="h4"
+                    gutterBottom
+                    sx={{
+                        fontFamily: exo2.style.fontFamily,
+                        fontWeight: "700",
+                        letterSpacing: 1.2,
+                        fontSize: 42,
+                        marginTop: 1, // Minimal margin
+                        marginBottom: 1,
                     }}
-                    domain={[teamsBounds.minY, teamsBounds.maxY]} // Your min and max Y values
-                    tickCount={Math.ceil(teamsBounds.maxY - teamsBounds.minY) + 1} // Number of ticks
-                    interval={0} // Ensures no ticks are skipped
-                    tickFormatter={(value) => value.toFixed(0)} // Optional: formats ticks as integers
-                />
-                <Bar dataKey="pitTime" radius={[14, 14, 0, 0]}>
-                    {teamsData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                    <LabelList 
-                        dataKey="pitTime" 
-                        position="top" 
-                        formatter={(value: number) => value.toFixed(2)}
-                        fontFamily={exo2Regular.style.fontFamily}
-                        fontWeight="600"
-                        fontSize={20}
-                    />
-                </Bar>
-            </BarChart>
-        </ResponsiveContainer>
-        </Box>
-    </ThemeProvider>
-  );
+                >
+                    Pit Stop Performance
+                </Typography>
+                <ToggleButtonGroup
+                    value={dataType}
+                    exclusive
+                    onChange={handleDataChange}
+                    sx={{ mb: 1 }}
+                >
+                    <ToggleButton value="teams">Teams</ToggleButton>
+                    <ToggleButton value="drivers">Drivers</ToggleButton>
+                </ToggleButtonGroup>
+                <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                        data={dataType === "teams" ? teamsData : driverData}
+                        margin={{ top: 10, right: 20, left: 20, bottom: 5 }}
+                    >
+                        <CartesianGrid strokeDasharray="6 6" vertical={false} />
+                        <XAxis
+                            dataKey="team"
+                            fontFamily={exo2.style.fontFamily}
+                            fontSize={16}
+                            fontWeight="600"
+                            style={{ fill: "#EEEEEE" }}
+                            tickCount={0}
+                        />
+                        <YAxis
+                            fontFamily={exo2.style.fontFamily}
+                            fontSize={18}
+                            fontWeight="500"
+                            style={{ fill: "#EEEEEE" }}
+                            label={{
+                                value: "Average Pit Stop Time (s)",
+                                angle: -90,
+                                position: "insideLeft",
+                                style: { fontFamily: exo2.style.fontFamily, fontWeight: "600" },
+                                fill: "#FFFFFF",
+                                dy: 70,
+                            }}
+                            domain={[
+                                (dataType === "teams" ? teamsBounds : driverBounds).minY,
+                                (dataType === "teams" ? teamsBounds : driverBounds).maxY,
+                            ]}
+                            tickCount={Math.ceil(
+                                (dataType === "teams" ? teamsBounds : driverBounds).maxY -
+                                (dataType === "teams" ? teamsBounds : driverBounds).minY
+                            ) + 1}
+                            interval={0}
+                            tickFormatter={(value) => value.toFixed(0)}
+                        />
+                        <Bar dataKey="pitTime" radius={[14, 14, 0, 0]}>
+                            {(dataType === "teams" ? teamsData : driverData).map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={entry.color} />
+                            ))}
+                            <LabelList
+                                dataKey="pitTime"
+                                position="top"
+                                formatter={(value: number) => value.toFixed(2)}
+                                fontFamily={exo2Regular.style.fontFamily}
+                                fontWeight="600"
+                                fontSize={20}
+                            />
+                        </Bar>
+                    </BarChart>
+                </ResponsiveContainer>
+            </Box>
+        </ThemeProvider>
+    );
 };
 
 export default PitPerformanceChart;
