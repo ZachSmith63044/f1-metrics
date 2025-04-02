@@ -1,29 +1,172 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, Cell, LabelList, ReferenceLine } from "recharts";
-import { Box, Typography, ThemeProvider, CssBaseline, ToggleButtonGroup, ToggleButton, Stack, CircularProgress, LinearProgress, Tab, Tabs } from "@mui/material";
+import React, { useState, useEffect, useRef } from "react";
+import { Box, Typography, ThemeProvider, CssBaseline, Tab, Tabs, Checkbox, ToggleButtonGroup, ToggleButton } from "@mui/material";
+import CheckIcon from '@mui/icons-material/Check';
+import CloseIcon from '@mui/icons-material/Close';
 import { LapData } from "../../../../classes/lapData";
 import { DriverData } from "../../../../classes/driverData";
-import { exo2, exo2Regular } from "../../../../styles";
 import darkTheme from "../../../../theme";
 import Navbar from "../../../../components/Navbar";
 import { fetchSessionData } from "../../../../utils/fetchSessionData";
 import { useParams } from "next/navigation";
+import { DataGrid, GridColDef } from '@mui/x-data-grid';
+import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 
+interface DriverLapData {
+    driver: DriverData;
+    laps: LapData[];
+}
 
-const SpeedsChart = () => {
+interface DriverLapDataSingle {
+    driver: DriverData;
+    lap: LapData;
+}
+
+interface DriverDataLegend {
+    driverName: string;
+    teamColour: string;
+    isDashed: boolean;
+    position: number;
+}
+
+const LapTimesChart = () => {
     const [lapsData, setLapsData] = useState<LapData[][]>([[]]);
     const [driversData, setDriversData] = useState<DriverData[]>([new DriverData("Loading", "...", "Loading...", "#AAAAAA", 1, -1, -1, -1, 0, -1, 0, "Loading...")]);
     const [driverPositions, setDriverPositions] = useState<number[]>([0]); // [0] contains index of first place
     const [driversDisplay, setDriversDisplay] = useState<string[]>(["Loading..."]);
     const [currentDriverIndex, setDriverIndex] = useState<number>(0);
     const [driverChosenVal, setDriverChosen] = useState<string>("Loading...");
+    const [gridKey, setGridKey] = useState(0);
+    const [driverDataLegend, setDriverDataLegend] = useState<DriverDataLegend[]>([]);
+
+    const [lineDataLapNumber, setLineDataLapNumber] = useState<DriverLapData[]>([]);
+    const [lineDataTyreAge, setLineDataTyreAge] = useState<DriverLapData[]>([]);
+
+    const [minLapTime, setMinLapTime] = useState<number>(90);
+    const [maxLapTime, setMaxLapTime] = useState<number>(100);
+
+    const [minLapNumber, setMinLapNumber] = useState<number>(1);
+    const [maxLapNumber, setMaxLapNumber] = useState<number>(78);
+
+    const [minTyreAge, setMinTyreAge] = useState<number>(1);
+    const [maxTyreAge, setMaxTyreAge] = useState<number>(78);
 
     
-    const handleDriverChange = (event: React.SyntheticEvent, value: any) => {
-        if (value !== null) setDriverChosen(value);
+
+    const [lastChangeIndex, setLastChangeIndex] = useState(-1);
+
+    const [pageType, setPageType] = useState<"data" | "chart">("data");
+    const [xAxisType, setXAxisType] = useState<"lap number" | "tyre age">("lap number");
+    const [yAxisType, setYAxisType] = useState<"lap time" | "position">("lap time");
+
+    const compoundColours: { [key: string]: string } = {"SOFT": "red", "MEDIUM": "yellow", "HARD": "lightgrey"};
+    
+    const chartPressed = () => {
+        console.log("CHART PRESSED");
+
+        let lineLapNumberData: DriverLapData[] = [];
+        let lineTyreAgeData: DriverLapData[] = [];
+
+        let legendData: DriverDataLegend[] = [];
+
+        let minLapTime = 999;
+        let maxLapTime = 0;
+
+        let minLapNumber = 999;
+        let maxLapNumber = 0;
+        let minTyreAge = 999;
+        let maxTyreAge = 0;
+
+        for (let i = 0; i < lapsData.length; i++)
+        {
+            let currentDriverLapData: DriverLapData = {driver: driversData[i], laps: []};
+            let currentDriverLapNumberData: DriverLapData = {driver: driversData[i], laps: []};
+            for (let j = 0; j < lapsData[i].length; j++)
+            {
+                if (lapsData[i][j].isChecked)
+                {
+                    currentDriverLapData.laps.push(lapsData[i][j]);
+                    currentDriverLapNumberData.laps.push(lapsData[i][j]);
+                    if (maxLapTime < lapsData[i][j].lapTime)
+                    {
+                        maxLapTime = lapsData[i][j].lapTime;
+                    }
+                    if (minLapTime > lapsData[i][j].lapTime)
+                    {
+                        minLapTime = lapsData[i][j].lapTime;
+                    }
+
+                    if (maxLapNumber < lapsData[i][j].lapNumber)
+                    {
+                        maxLapNumber = lapsData[i][j].lapNumber;
+                    }
+                    if (minLapNumber > lapsData[i][j].lapNumber)
+                    {
+                        minLapNumber = lapsData[i][j].lapNumber;
+                    }
+
+                    if (maxTyreAge < lapsData[i][j].tyreLife)
+                    {
+                        maxTyreAge = lapsData[i][j].tyreLife;
+                    }
+                    if (minTyreAge > lapsData[i][j].tyreLife)
+                    {
+                        minTyreAge = lapsData[i][j].tyreLife;
+                    }
+                }
+                else
+                {
+                    if (currentDriverLapData.laps.length != 0)
+                    {
+                        lineTyreAgeData.push(currentDriverLapData);
+                        currentDriverLapData = {driver: driversData[i], laps: []};
+                    }
+                }
+            }
+            if (currentDriverLapData.laps.length != 0)
+            {
+                lineTyreAgeData.push(currentDriverLapData);
+            }
+            if (currentDriverLapNumberData.laps.length != 0)
+            {
+                lineLapNumberData.push(currentDriverLapNumberData);
+                legendData.push({ driverName: driversData[i].firstName + " " + driversData[i].lastName, teamColour: "#" + driversData[i].teamColour, isDashed: false, position: driversData[i].position });
+            }
+        }
+
+        console.log(lineTyreAgeData);
+        console.log(lineLapNumberData);
+
+        setLineDataLapNumber(lineLapNumberData);
+        setLineDataTyreAge(lineTyreAgeData);
+        setDriverDataLegend(legendData);
+
+        minLapTime = Math.floor(minLapTime);
+        maxLapTime = Math.ceil(maxLapTime);
+
+        setMinLapTime(minLapTime);
+        setMaxLapTime(maxLapTime);
+        setMinLapNumber(minLapNumber);
+        setMaxLapNumber(maxLapNumber);
+        setMinTyreAge(minTyreAge);
+        setMaxTyreAge(maxTyreAge);
+    };
+    
+    const handlePageChange = (_event: React.MouseEvent<HTMLElement>, newValue: "data" | "chart") => {
+        if (newValue == "chart")
+        {
+            chartPressed();
+        }
+        if (newValue !== null) setPageType(newValue);
+    };
+    
+    const handleXAxisChange = (_event: React.MouseEvent<HTMLElement>, newValue: "lap number" | "tyre age") => {
+        if (newValue !== null) setXAxisType(newValue);
+    };
+    const handleYAxisChange = (_event: React.MouseEvent<HTMLElement>, newValue: "lap time" | "position") => {
+        if (newValue !== null) setYAxisType(newValue);
     };
 
 
@@ -31,6 +174,26 @@ const SpeedsChart = () => {
     const year = params.year as string;
     const round = decodeURIComponent(params.round as string);
     const session = decodeURIComponent(params.session as string);
+
+    const shiftPressed = useRef(false);
+
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === "Shift") shiftPressed.current = true;
+        };
+
+        const handleKeyUp = (event: KeyboardEvent) => {
+            if (event.key === "Shift") shiftPressed.current = false;
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+        window.addEventListener("keyup", handleKeyUp);
+
+        return () => {
+            window.removeEventListener("keydown", handleKeyDown);
+            window.removeEventListener("keyup", handleKeyUp);
+        };
+    }, []);
 
     useEffect(() => {
       const fetchLaps = async () => {
@@ -128,25 +291,499 @@ const SpeedsChart = () => {
       fetchLaps();
     }, []);
 
+
+
+    
+    const handleDriverChange = (event: React.SyntheticEvent, value: any) => {
+        setDriverIndex(driversDisplay.indexOf(value));
+        setGridKey(gridKey + 1);
+        setLastChangeIndex(-1);
+        if (value !== null) setDriverChosen(value);
+    };
+
+    const formatLapTime = (seconds: number): string => {
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+        const formattedSeconds = remainingSeconds.toFixed(3).padStart(6, '0'); // Ensures 2 digits + 3 decimals
+        return `${minutes}:${formattedSeconds}`;
+    };
+    
+    const columns: GridColDef[] = [
+        {
+            field: 'lapNumber',
+            headerName: 'Lap Number',
+            width: 130,
+            disableColumnMenu: true,
+            renderCell: (params) => {
+                const row = params.row as LapData;
+                return (
+                    row.lapNumber
+                );
+            },
+        },
+        {
+            field: 'lapTime',
+            headerName: 'Lap Time',
+            width: 110,
+            disableColumnMenu: true,
+            valueFormatter: (params: number) => params == -1 ? "nan" : formatLapTime(params),
+        },
+        {
+            field: 'sector1Time',
+            headerName: 'Sector 1',
+            width: 100,
+            disableColumnMenu: true,
+            valueFormatter: (params: number) => params == -1 ? "nan" : params.toFixed(3).padStart(6, '0'),
+        },
+        {
+            field: 'sector2Time',
+            headerName: 'Sector 2',
+            width: 102,
+            disableColumnMenu: true,
+            valueFormatter: (params: number) => params == -1 ? "nan" : params.toFixed(3).padStart(6, '0'),
+        },
+        {
+            field: 'sector3Time',
+            headerName: 'Sector 3',
+            width: 102,
+            disableColumnMenu: true,
+            valueFormatter: (params: number) => params == -1 ? "nan" : params.toFixed(3).padStart(6, '0'),
+        },
+        {
+            field: 'compound',
+            headerName: 'Compound',
+            width: 120,
+            disableColumnMenu: true,
+        },
+        {
+            field: 'tyreLife',
+            headerName: 'Tyre Age',
+            width: 105,
+            disableColumnMenu: true,
+        },
+        {
+            field: 'isAccurate',
+            headerName: 'Accurate',
+            width: 110,
+            disableColumnMenu: true,
+            renderCell: (params) => {
+                const isAccurate = params.row.isAccurate;
+                return (
+                    <div style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
+                        {isAccurate ? (
+                            <CheckIcon style={{ color: 'green' }} />
+                        ) : (
+                            <CloseIcon style={{ color: 'red' }} />
+                        )}
+                    </div>
+                );
+            },
+        },
+        {
+            field: 'isChecked',
+            headerName: 'Selected',
+            width: 75,
+            disableColumnMenu: true,
+            sortable: false,
+            filterable: false,
+            renderCell: (params) => {
+                const row = params.row as LapData;
+                return (
+                    <div style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
+                        <Checkbox
+                            checked={row.isChecked}
+                            onChange={(event) => {
+                                const newLapsData = [...lapsData];
+                                newLapsData[driverPositions[currentDriverIndex]][row.lapNumber - 1].isChecked = event.target.checked;
+
+                                if (shiftPressed.current && lastChangeIndex != -1) {
+                                    console.log("SHIFT PRESSED");
+
+                                    if (lastChangeIndex > row.lapNumber - 1)
+                                    {
+                                        for (let i = row.lapNumber - 1; i < lastChangeIndex; i++)
+                                        {
+                                            console.log(i);
+                                            newLapsData[driverPositions[currentDriverIndex]][i].isChecked = true;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        for (let i = lastChangeIndex; i < row.lapNumber; i++)
+                                        {
+                                            console.log(i);
+                                            newLapsData[driverPositions[currentDriverIndex]][i].isChecked = true;
+                                        }
+                                    }
+                                }
+
+                                setLapsData(newLapsData);
+
+                                setLastChangeIndex(row.lapNumber - 1);
+                            }}
+                        >
+                        </Checkbox>
+                    </div>
+                );
+            },
+        },
+    ];
+
+
+    const handleHeaderClick = (field: string) => {
+        // Handle the header click for the 'Selected' column
+        if (field === 'isChecked') {
+            // Select all laps
+            const newLapsData = [...lapsData[driverPositions[currentDriverIndex]]];
+            const isChecked = newLapsData.map((x) => x.isChecked);
+            if (isChecked.includes(true))
+            {
+                if (isChecked.includes(false))
+                {
+                    // select all laps
+                    for (let i = 0; i < newLapsData.length; i++)
+                    {
+                        newLapsData[i].isChecked = true;
+                    }
+                }
+                else
+                {
+                    // deselect all laps
+                    for (let i = 0; i < newLapsData.length; i++)
+                    {
+                        newLapsData[i].isChecked = false;
+                    }
+                }
+            }
+            else
+            {
+                // select quicklaps
+                for (let i = 0; i < newLapsData.length; i++)
+                {
+                    if (newLapsData[i].isAccurate)
+                    {
+                        newLapsData[i].isChecked = true;
+                    }
+                }
+            }
+            let finishedLap = [...lapsData];
+            finishedLap[driverPositions[currentDriverIndex]] = newLapsData;
+            setLapsData(finishedLap);
+        }
+    };
+
+
+    const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: any[]; label?: number }) => {
+        if (active && payload && payload.length && label) {
+            console.log(label);
+            let lapDatas: DriverLapDataSingle[] = [];
+            for (let i = 0; i < lineDataLapNumber.length; i++)
+            {
+                for (let j = 0; j < lineDataLapNumber[i].laps.length; j++)
+                {
+                    if (lineDataLapNumber[i].laps[j].lapNumber == label)
+                    {
+                        lapDatas.push({driver: lineDataLapNumber[i].driver, lap: lineDataLapNumber[i].laps[j]});
+                    }
+                }
+            }
+            return (
+                <div style={{
+                    background: "#333", // Dark grey background
+                    color: "#fff", // White text for contrast
+                    padding: "10px",
+                    border: "1px solid #555",
+                    borderRadius: "5px",
+                    boxShadow: "0px 0px 5px rgba(0,0,0,0.4)"
+                }}>
+                    <p style={{ fontWeight: "bold", marginBottom: "5px" }}>Lap {label}</p> {/* Shows hovered lap number */}
+                    {lapDatas.map((entry, index) => {
+                        return (
+                            <div key={index} style={{ marginBottom: "5px" }}>
+                                <p style={{ fontWeight: "bold", color: `#${entry.driver.teamColour}`, margin: 0 }}>
+                                    {entry.driver.lastName}
+                                </p>
+                                <p style={{ margin: "2px 0" }}>Lap Time: {formatLapTime(entry.lap.lapTime)}</p>
+                                <p style={{ margin: "2px 0" }}>
+                                    Tyre: <span style={{ color: compoundColours[entry.lap.compound], fontWeight: "600" }}>{entry.lap.compound} ({entry.lap.tyreLife})</span>
+                                </p>
+                            </div>
+                        );
+                    })}
+                </div>
+            );
+        }
+        return null;
+    };
+
+    const legendColumns: GridColDef[] = [
+        {
+            field: "driverName",
+            headerName: 'Driver Name',
+            width: 160,
+            disableColumnMenu: true,
+        },
+        {
+            field: "teamColour",
+            headerName: "Legend",
+            width: 100,
+            sortable: false,
+            disableColumnMenu: true,
+            renderCell: (params) => (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'start', height: '100%' }}>
+                    <svg width="90" height="6">
+                        <line
+                            x1="0" // Start the line a little from the left to leave some space
+                            y1="3" // Center vertically
+                            x2="85" // End the line a little from the right to leave some space
+                            y2="3" // Keep the line centered vertically
+                            stroke={params.row.teamColour || 'green'} // Dynamic stroke color
+                            strokeWidth="4" // Line width
+                            strokeDasharray={params.row.isDashed ? "5,5" : "0"} // Dashed condition
+                        />
+                    </svg>
+                </div>
+            ),
+        },
+        {
+            field: "position",
+            headerName: "Position",
+            width: 110,
+            disableColumnMenu: true,
+            valueFormatter: (params: number) => params == -1 ? "nan" : params,
+        },
+    ];
+    
+
     return (
         <ThemeProvider theme={darkTheme}>
             <CssBaseline />
             <Navbar />
+            {
+                (pageType == "data") ?
+                <Box sx={{ p: 2 }}>
+                    <Box
+                        sx={{
+                            display: "flex",
+                            flexDirection: { xs: "column", sm: "row" },
+                            gap: 2,
+                            justifyContent: "center",
+                            alignItems: "center",
+                            mb: 2,
+                        }}
+                    >
+                        <ToggleButtonGroup
+                            value={pageType}
+                            exclusive
+                            onChange={handlePageChange}
+                            sx={{
+                                mb: 1,
+                                border: "1px solid #AAAAAA",
+                                "& .MuiToggleButton-root": {
+                                    border: "1px solid #AAAAAA",
+                                    "&.Mui-selected": {
+                                        border: "1px solid #AAAAAA",
+                                    },
+                                },
+                            }}
+                        >
+                            <ToggleButton value="data">Data</ToggleButton>
+                            <ToggleButton value="chart">Chart</ToggleButton>
+                        </ToggleButtonGroup>
+                        <Tabs
+                            value={driverChosenVal}
+                            onChange={handleDriverChange}
+                            variant="scrollable"
+                            scrollButtons="auto"
+                            sx={{mb:2}}
+                        >
+                            {driversDisplay.map((driver) => (
+                                <Tab key={driver} label={driver} value={driver} />
+                            ))}
+                        </Tabs>
+                    </Box>
+                    <DataGrid
+                        key={gridKey}
+                        rows={lapsData[driverPositions[currentDriverIndex]].map((row, index) => ({ ...row, id: index }))}
+                        columns={columns}
+                        disableRowSelectionOnClick
+                        onColumnHeaderClick={(params) => handleHeaderClick(params.field)}
+                        rowHeight={40}
+                        sx={{
+                            '& .MuiDataGrid-columnHeaders': {
+                                backgroundColor: '#000000',  // Dark grey background
+                                color: '#fff',  // White text color for contrast
+                            },
+                        }}
+                    />
+                </Box>
+                :
+                <Box sx={{ p: 2, height: "calc(100vh - 90px)" }}>
+                    <Box 
+                        display="flex" 
+                        justifyContent="space-between" 
+                        alignItems="center" 
+                        width="auto"
+                        gap={2}
+                        mb={2}
+                    >
+                        <ToggleButtonGroup
+                            value={pageType}
+                            exclusive
+                            onChange={handlePageChange}
+                            sx={{
+                                mb: 1,
+                                border: "1px solid #AAAAAA",
+                                "& .MuiToggleButton-root": {
+                                    border: "1px solid #AAAAAA",
+                                    "&.Mui-selected": {
+                                        border: "1px solid #AAAAAA",
+                                    },
+                                },
+                            }}
+                        >
+                            <ToggleButton value="data">Data</ToggleButton>
+                            <ToggleButton value="chart">Chart</ToggleButton>
+                        </ToggleButtonGroup>
+                        <Box>
+                            <ToggleButtonGroup
+                                value={xAxisType}
+                                exclusive
+                                onChange={handleXAxisChange}
+                                sx={{
+                                    mb: 1,
+                                    border: "1px solid #AAAAAA",
+                                    "& .MuiToggleButton-root": {
+                                        border: "1px solid #AAAAAA",
+                                        "&.Mui-selected": {
+                                            border: "1px solid #AAAAAA",
+                                        },
+                                    },
+                                }}
+                            >
+                                <ToggleButton value="lap number">Lap Number</ToggleButton>
+                                <ToggleButton value="tyre age">Tyre Age</ToggleButton>
+                            </ToggleButtonGroup>
+                            <ToggleButtonGroup
+                                value={yAxisType}
+                                exclusive
+                                onChange={handleYAxisChange}
+                                sx={{
+                                    mb: 1,
+                                    border: "1px solid #AAAAAA",
+                                    "& .MuiToggleButton-root": {
+                                        border: "1px solid #AAAAAA",
+                                        "&.Mui-selected": {
+                                            border: "1px solid #AAAAAA",
+                                        },
+                                    },
+                                }}
+                            >
+                                <ToggleButton value="lap time">Lap Time</ToggleButton>
+                                <ToggleButton value="position">Position</ToggleButton>
+                            </ToggleButtonGroup>
+                        </Box>
+                        <Box width={375}>
+                            <DataGrid
+                                style={{ width: 375 }}
+                                rows={driverDataLegend.map((row, index) => ({ ...row, id: index }))}
+                                columns={legendColumns}
+                                disableRowSelectionOnClick
+                                rowHeight={40}
+                                autoHeight
+                                hideFooter={true}
+                                sx={{ flexShrink: 0 }}  // Prevent DataGrid from shrinking
+                            />
+                        </Box>
+                    </Box>
 
-            <Tabs
-                value={driverChosenVal}
-                onChange={handleDriverChange}
-                variant="scrollable"
-                scrollButtons="auto"
-                sx={{mt:2}}
-            >
-                {driversDisplay.map((driver) => (
-                    <Tab key={driver} label={driver} value={driver} />
-                ))}
-            </Tabs>
+
+                    <div style={{ height: "100%" }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                            <LineChart>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis type="number" dataKey={xAxisType == "lap number" ? "lapNumber" : "tyreLife"} domain={xAxisType == "lap number" ? [minLapNumber, maxLapNumber] : [minTyreAge, maxTyreAge]} tickCount={xAxisType == "lap number" ? maxLapNumber - minLapNumber + 1 : maxTyreAge - minTyreAge + 1} tick={{ fill: 'white' }} />
+                                <YAxis domain={yAxisType == "position" ? [0, lapsData.length + 1] : [minLapTime, maxLapTime]} reversed={yAxisType == "position"} tickCount={yAxisType == "position" ? lapsData.length + 2 : maxLapTime - minLapTime + 1} tickFormatter={(value) => yAxisType == "position" ? value : formatLapTime(value)} tick={{ fill: 'white' }} width={70} />
+                                {yAxisType == "position" ? null : <Tooltip content={<CustomTooltip />} />}
+                                {
+                                    xAxisType == "lap number" ?
+                                    lineDataLapNumber.map((driverData) => (
+                                        <Line
+                                            key={driverData.driver.lastName + driverData.laps[0].lapNumber.toString()}
+                                            name={driverData.driver.lastName}
+                                            type="linear"
+                                            data={driverData.laps}
+                                            dataKey={yAxisType == "lap time" ? "lapTime" : "position"}
+                                            stroke={"#" + driverData.driver.teamColour}
+                                            strokeWidth={3}
+                                            dot={(props) => {
+                                                const { cx, cy, payload } = props; // Payload contains the lap data
+                                                const compound = payload.compound as string; // Type assertion or ensure proper typing
+                                                const fillColor = Object.keys(compoundColours).includes(compound)
+                                                    ? compoundColours[compound]
+                                                    : "#FFFFFF";
+                                                return (
+                                                    <circle
+                                                        key={`${driverData.driver.lastName}-${payload.lapNumber}`} // Add unique key here
+                                                        cx={cx}
+                                                        cy={cy}
+                                                        r={8}
+                                                        stroke={"#" + driverData.driver.teamColour}
+                                                        strokeWidth={3}
+                                                        fill={fillColor}
+                                                    />
+                                                );
+                                            }}
+                                            activeDot={{
+                                                r: 0
+                                            }}
+                                        />
+                                    )
+                                )
+                                :
+                                lineDataTyreAge.map((driverData) => (
+                                    <Line
+                                        key={driverData.driver.lastName + driverData.laps[0].lapNumber.toString()}
+                                        name={driverData.driver.lastName}
+                                        type="linear"
+                                        data={driverData.laps}
+                                        dataKey={yAxisType == "lap time" ? "lapTime" : "position"}
+                                        stroke={"#" + driverData.driver.teamColour}
+                                        strokeWidth={3}
+                                        dot={(props) => {
+                                            const { cx, cy, payload } = props; // Payload contains the lap data
+                                            const compound = payload.compound as string; // Type assertion or ensure proper typing
+                                            const fillColor = Object.keys(compoundColours).includes(compound)
+                                                ? compoundColours[compound]
+                                                : "#FFFFFF";
+                                            return (
+                                                <circle
+                                                    key={`${driverData.driver.lastName}-${payload.lapNumber}`} // Add unique key here
+                                                    cx={cx}
+                                                    cy={cy}
+                                                    r={8}
+                                                    stroke={"#" + driverData.driver.teamColour}
+                                                    strokeWidth={3}
+                                                    fill={fillColor}
+                                                />
+                                            );
+                                        }}
+                                        activeDot={{
+                                            r: 0
+                                        }}
+                                    />
+                                )
+                            )
+                            }
+                            </LineChart>
+                        </ResponsiveContainer>
+                        
+                    </div>
+                </Box>
+            }
             
         </ThemeProvider>
     );
 };
 
-export default SpeedsChart;
+export default LapTimesChart;

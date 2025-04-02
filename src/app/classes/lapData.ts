@@ -18,6 +18,8 @@ export class LapData {
     pitInTime: number;
     pitOutTime: number;
     throttle: number;
+    isChecked?: boolean;
+    active?: boolean;
   
     // Constructor
     constructor(
@@ -39,7 +41,8 @@ export class LapData {
       maxDrs: boolean,
       pitInTime: number,
       pitOutTime: number,
-      throttle: number
+      throttle: number,
+      isChecked?: boolean
     ) {
       this.time = time;
       this.lapTime = lapTime;
@@ -60,6 +63,7 @@ export class LapData {
       this.pitInTime = pitInTime;
       this.pitOutTime = pitOutTime;
       this.throttle = throttle;
+      this.isChecked = isChecked == true;
     }
   
     // Convert from an array (similar to the Dart fromList constructor)
@@ -123,6 +127,6 @@ export class LapData {
   
 
     toString(): string {
-      return `LapData(time: ${this.time}, lapTime: ${this.lapTime}, lapNumber: ${this.lapNumber}, sector1Time: ${this.sector1Time}, sector2Time: ${this.sector2Time}, sector3Time: ${this.sector3Time}, compound: ${this.compound}, tyreLife: ${this.tyreLife}, freshTyre: ${this.freshTyre}, deleted: ${this.deleted}, isAccurate: ${this.isAccurate}, stint: ${this.stint}, position: ${this.position})`;
+      return `LapData(time: ${this.time}, lapTime: ${this.lapTime}, lapNumber: ${this.lapNumber}, sector1Time: ${this.sector1Time}, sector2Time: ${this.sector2Time}, sector3Time: ${this.sector3Time}, compound: ${this.compound}, tyreLife: ${this.tyreLife}, freshTyre: ${this.freshTyre}, deleted: ${this.deleted}, isAccurate: ${this.isAccurate}, stint: ${this.stint}, position: ${this.position}, isChecked@ ${this.isChecked})`;
     }
 }
