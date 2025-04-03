@@ -11,7 +11,8 @@ const darkTheme = createTheme({
       main: "#0A84FF", // Neon blue
     },
     background: {
-      default: "#3C3C3C", // Very dark gray
+      default: "#3C3C3C", // 4A4A4A
+      //default: "#3C3C3C", // Very dark gray
       paper: "#1E1E1E", // Slightly lighter gray
     },
     text: {

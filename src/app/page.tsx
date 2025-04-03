@@ -44,8 +44,8 @@ export default function Home() {
         <PageView 
           url="https://firebasestorage.googleapis.com/v0/b/f1analysis-d2911.firebasestorage.app/o/Images%2FspeedTime.png?alt=media&token=c9120dbc-996d-4475-b429-978036605aab"
           description="Analyse each lap's speed, throttle and braking, as well as comparing multiple drivers"
-          title="Speed Time"
-          pageLink=""
+          title="Speed Distance"
+          pageLink="/speedDistance"
           onClick={() => console.log("Speed Time Clicked")}
         />
         <PageView 
@@ -56,7 +56,7 @@ export default function Home() {
           onClick={() => console.log("Track Map Clicked")}
         />
         <PageView 
-          url="https://firebasestorage.googleapis.com/v0/b/f1analysis-d2911.firebasestorage.app/o/Images%2FlapTimeView.png?alt=media&token=72d06d3f-1552-4914-a416-c9f611aafcfb"
+          url="https://firebasestorage.googleapis.com/v0/b/f1analysis-d2911.firebasestorage.app/o/Images%2FLapTimesChart.jpg?alt=media&token=e1cfcb34-7642-42a2-8871-82ed4056d78d"
           description="View and analyse each drivers lap times throughout any session"
           title="Lap Time Chart"
           pageLink="/lapTimesChart"
@@ -70,7 +70,7 @@ export default function Home() {
           onClick={() => console.log("Track Map Clicked")}
         />
         <PageView 
-          url="https://firebasestorage.googleapis.com/v0/b/f1analysis-d2911.firebasestorage.app/o/Images%2FPitPerformance.jpg?alt=media&token=99d80513-32c4-4147-abfb-f7e1164c4699"
+          url="https://firebasestorage.googleapis.com/v0/b/f1analysis-d2911.firebasestorage.app/o/Images%2FPitPerformance.jpg?alt=media&token=588e4765-381f-4431-ad39-0ac28618e0b9"
           description="Find out which pit crew performed best"
           title="Pit Performance Chart"
           pageLink="/pitPerformance"
@@ -86,23 +86,9 @@ export default function Home() {
           onClick={() => console.log("Track Map Clicked")}
         />
         <PageView 
-          url="https://firebasestorage.googleapis.com/v0/b/f1analysis-d2911.firebasestorage.app/o/Images%2FstartAnalysis.png?alt=media&token=1f8e6652-c60d-4f98-a8ea-cd328ec36e61"
-          description="Analyse who got off the line best, and in which phase they gained an advantage"
-          title="Start Analysis"
-          pageLink=""
-          onClick={() => console.log("Track Map Clicked")}
-        />
-        <PageView 
           url="https://firebasestorage.googleapis.com/v0/b/f1analysis-d2911.firebasestorage.app/o/Images%2FraceStrategy.png?alt=media&token=03d6f694-de5b-4570-acf1-5d4dd609a751"
           description="Find out who boxed for which compound"
           title="Race Strategy View"
-          pageLink=""
-          onClick={() => console.log("Track Map Clicked")}
-        />
-        <PageView 
-          url="https://firebasestorage.googleapis.com/v0/b/f1analysis-d2911.firebasestorage.app/o/Images%2FraceMaxSpeeds.png?alt=media&token=7a28aff7-7880-4bcd-93cb-23f7cf88a86a"
-          description="Find the fastest (and slowest) cars in a straight line"
-          title="Race Min/Max Speeds"
           pageLink=""
           onClick={() => console.log("Track Map Clicked")}
         />
