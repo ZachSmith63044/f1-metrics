@@ -115,7 +115,7 @@ const PitPerformanceChart = () => {
                     {
                         driverBound.maxY = Math.ceil(pitTime + 1);
                     }
-                    driverPitPerformance.push(new PitPerformance(driversData[i].lastName.slice(0,3).toUpperCase(), pitsTime[i]/pitsCount[i], "#" + driversData[i].teamColour));
+                    driverPitPerformance.push(new PitPerformance(driversData[i].lastName.slice(0,3).toUpperCase(), pitsTime[i]/pitsCount[i], driversData[i].teamColour));
                 }
             }
 
@@ -132,7 +132,7 @@ const PitPerformanceChart = () => {
                     {
                         teamsPitPerformanceBounds.maxY = Math.ceil(pitTime + 1);
                     }
-                    teamsPitPerformance.push(new PitPerformance(teamsDataT[i].teamName, teamsPitsTime[i]/teamsPitsCount[i], "#" + teamsDataT[i].teamColour));
+                    teamsPitPerformance.push(new PitPerformance(teamsDataT[i].teamName, teamsPitsTime[i]/teamsPitsCount[i], teamsDataT[i].teamColour));
                 
                 }
             }

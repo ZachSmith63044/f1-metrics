@@ -11,7 +11,7 @@ import Navbar from "../../../../components/Navbar";
 import { fetchSessionData } from "../../../../utils/fetchSessionData";
 import { useParams } from "next/navigation";
 import { DataGrid, GridColDef } from '@mui/x-data-grid';
-import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 
 interface DriverLapData {
@@ -33,7 +33,7 @@ interface DriverDataLegend {
 
 const LapTimesChart = () => {
     const [lapsData, setLapsData] = useState<LapData[][]>([[]]);
-    const [driversData, setDriversData] = useState<DriverData[]>([new DriverData("Loading", "...", "Loading...", "#AAAAAA", 1, -1, -1, -1, 0, -1, 0, "Loading...")]);
+    const [driversData, setDriversData] = useState<DriverData[]>([new DriverData("Loading", "...", "Loading...", "#000000", 1, -1, -1, -1, 0, -1, 0, "Loading...")]);
     const [driverPositions, setDriverPositions] = useState<number[]>([0]); // [0] contains index of first place
     const [driversDisplay, setDriversDisplay] = useState<string[]>(["Loading..."]);
     const [currentDriverIndex, setDriverIndex] = useState<number>(0);
@@ -135,7 +135,7 @@ const LapTimesChart = () => {
             if (currentDriverLapNumberData.laps.length != 0)
             {
                 lineLapNumberData.push(currentDriverLapNumberData);
-                legendData.push({ driverName: driversData[i].firstName + " " + driversData[i].lastName, teamColour: "#" + driversData[i].teamColour, isDashed: false, position: driversData[i].position });
+                legendData.push({ driverName: driversData[i].firstName + " " + driversData[i].lastName, teamColour: driversData[i].teamColour, isDashed: false, position: driversData[i].position });
             }
         }
 
@@ -522,7 +522,7 @@ const LapTimesChart = () => {
                     {lapDatas.map((entry, index) => {
                         return (
                             <div key={index} style={{ marginBottom: "5px" }}>
-                                <p style={{ fontWeight: "bold", color: `#${entry.driver.teamColour}`, margin: 0 }}>
+                                <p style={{ fontWeight: "bold", color: `${entry.driver.teamColour}`, margin: 0 }}>
                                     {entry.driver.lastName}
                                 </p>
                                 <p style={{ margin: "2px 0" }}>Lap Time: {formatLapTime(entry.lap.lapTime)}</p>
@@ -798,7 +798,7 @@ const LapTimesChart = () => {
                                             type="linear"
                                             data={driverData.laps}
                                             dataKey={yAxisType == "lap time" ? "lapTime" : "position"}
-                                            stroke={"#" + driverData.driver.teamColour}
+                                            stroke={driverData.driver.teamColour}
                                             strokeWidth={3}
                                             strokeDasharray={driverDataLegend[driverDataLegend.map((x) => x.driverName).indexOf(driverData.driver.firstName + " " + driverData.driver.lastName)].isDashed ? "8, 8" : "0"}
                                             dot={(props) => {
@@ -828,7 +828,7 @@ const LapTimesChart = () => {
                                                         cx={cx}
                                                         cy={cy}
                                                         r={dotsShown == "all" ? 8 : dotsShown == "some" ? isFirst ? 8 : 0 : 0}
-                                                        stroke={"#" + driverData.driver.teamColour}
+                                                        stroke={driverData.driver.teamColour}
                                                         strokeWidth={3}
                                                         fill={fillColor}
                                                     />
@@ -848,7 +848,7 @@ const LapTimesChart = () => {
                                         type="linear"
                                         data={driverData.laps}
                                         dataKey={yAxisType == "lap time" ? "lapTime" : "position"}
-                                        stroke={"#" + driverData.driver.teamColour}
+                                        stroke={driverData.driver.teamColour}
                                         strokeWidth={3}
                                         dot={(props) => {
                                             const { cx, cy, payload } = props;
@@ -877,7 +877,7 @@ const LapTimesChart = () => {
                                                     cx={cx}
                                                     cy={cy}
                                                     r={dotsShown == "all" ? 8 : dotsShown == "some" ? isFirst ? 8 : 0 : 0}
-                                                    stroke={"#" + driverData.driver.teamColour}
+                                                    stroke={driverData.driver.teamColour}
                                                     strokeWidth={3}
                                                     fill={fillColor}
                                                 />

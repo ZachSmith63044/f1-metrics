@@ -131,7 +131,7 @@ const SpeedsChart = () => {
 
             for (let i = 0; i < fastestLapsData.length; i++)
             {
-                let minSpeed = new SpeedsPerformance(driversData[i].lastName.slice(0, 3).toUpperCase(), fastestLapsData[i].minSpeed, "#" + driversData[i].teamColour);
+                let minSpeed = new SpeedsPerformance(driversData[i].lastName.slice(0, 3).toUpperCase(), fastestLapsData[i].minSpeed, driversData[i].teamColour);
                 minDriversSpeeds.push(minSpeed);
                 if (minSpeed.value - 1 < minDriversSpeedBounds.minY)
                 {
@@ -142,7 +142,7 @@ const SpeedsChart = () => {
                     minDriversSpeedBounds.maxY = minSpeed.value + 1;
                 }
 
-                let maxSpeed = new SpeedsPerformance(driversData[i].lastName.slice(0, 3).toUpperCase(), fastestLapsData[i].maxSpeed, "#" + driversData[i].teamColour);
+                let maxSpeed = new SpeedsPerformance(driversData[i].lastName.slice(0, 3).toUpperCase(), fastestLapsData[i].maxSpeed, driversData[i].teamColour);
                 maxDriversSpeeds.push(maxSpeed);
                 if (maxSpeed.value - 1 < maxDriversSpeedBounds.minY)
                 {
@@ -153,7 +153,7 @@ const SpeedsChart = () => {
                     maxDriversSpeedBounds.maxY = maxSpeed.value + 1;
                 }
 
-                let throttle = new SpeedsPerformance(driversData[i].lastName.slice(0, 3).toUpperCase(), fastestLapsData[i].throttle * 100, "#" + driversData[i].teamColour);
+                let throttle = new SpeedsPerformance(driversData[i].lastName.slice(0, 3).toUpperCase(), fastestLapsData[i].throttle * 100, driversData[i].teamColour);
                 throttleDrivers.push(throttle);
                 if (throttle.value - 1 < throttleDriversBounds.minY)
                 {
@@ -174,7 +174,7 @@ const SpeedsChart = () => {
 
             for (let i = 0; i < fastestLapsTeams.length; i++)
             {
-                let minSpeed = new SpeedsPerformance(teamsData[i].teamName, fastestLapsTeams[i].minSpeed, "#" + teamsData[i].teamColour);
+                let minSpeed = new SpeedsPerformance(teamsData[i].teamName, fastestLapsTeams[i].minSpeed, teamsData[i].teamColour);
                 minTeamsSpeeds.push(minSpeed);
                 if (minSpeed.value - 1 < minTeamsSpeedBounds.minY)
                 {
@@ -185,7 +185,7 @@ const SpeedsChart = () => {
                     minTeamsSpeedBounds.maxY = minSpeed.value + 1;
                 }
                 
-                let maxSpeed = new SpeedsPerformance(teamsData[i].teamName, fastestLapsTeams[i].maxSpeed, "#" + teamsData[i].teamColour);
+                let maxSpeed = new SpeedsPerformance(teamsData[i].teamName, fastestLapsTeams[i].maxSpeed, teamsData[i].teamColour);
                 maxTeamsSpeeds.push(maxSpeed);
                 if (maxSpeed.value - 1 < maxTeamsSpeedBounds.minY)
                 {
@@ -196,7 +196,7 @@ const SpeedsChart = () => {
                     maxTeamsSpeedBounds.maxY = maxSpeed.value + 1;
                 }
                 
-                let throttle = new SpeedsPerformance(teamsData[i].teamName, fastestLapsTeams[i].throttle * 100, "#" + teamsData[i].teamColour);
+                let throttle = new SpeedsPerformance(teamsData[i].teamName, fastestLapsTeams[i].throttle * 100, teamsData[i].teamColour);
                 throttleTeams.push(throttle);
                 if (throttle.value - 1 < throttleTeamsBounds.minY)
                 {
