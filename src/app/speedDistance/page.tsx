@@ -1,18 +1,15 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Box, ThemeProvider, CssBaseline } from "@mui/material";
+import { Box, ThemeProvider, CssBaseline, Button } from "@mui/material";
+import { useRouter } from "next/navigation";
 import darkTheme from "../theme";
 import Navbar from "../components/Navbar";
 import { fetchTelemetryData } from "../utils/fetchTelemetryData";
 import { fetchDriverData } from "../utils/fetchDriverData";
-import { LapMetadata, TelemetryFrame } from "../classes/telemetryData";
+import { LapMetadata, TelemetryFrame, FullLapData } from "../classes/telemetryData";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis, Legend } from "recharts";
-
-interface FullLapData {
-    lapMetadata: LapMetadata;
-    lap: TelemetryFrame[];
-}
+import { useStore } from "../store/store";
 
 interface TelemetryFrameMeta {
     metadata: LapMetadata,
@@ -20,6 +17,8 @@ interface TelemetryFrameMeta {
 }
 
 const SpeedDistance = () => {
+    const router = useRouter();
+
     const [lapsMetadata, setLapsMetadata] = useState<LapMetadata[]>([]);
     const [lapsData, setLapsData] = useState<TelemetryFrame[][]>([]);
 
@@ -27,6 +26,47 @@ const SpeedDistance = () => {
     const [maxDelta, setMaxDelta] = useState<number>(0.1);
     const [minSpeed, setMinSpeed] = useState<number>(0);
     const [maxSpeed, setMaxSpeed] = useState<number>(10);
+
+    const fullLapData = useStore((state) => state.fullLapData);
+    const lapLoadData = useStore((state) => state.lapLoad);
+    const setFullLapData = useStore((state) => state.setFullLapData);
+
+    const saveData = () => {
+        let laps: FullLapData[] = [];
+        for (let i = 0; i < lapsData.length; i++)
+        {
+            laps.push({ lapMetadata: lapsMetadata[i], lap: lapsData[i] });
+        }
+    }
+
+    const loadDataStart = () => {
+        let lapsMetadata = [];
+        let lapsData = [];
+        if (fullLapData.length > 0)
+        {
+            for (let i = 0; i < fullLapData.length; i++)
+            {
+                lapsMetadata.push(fullLapData![i].lapMetadata);
+                lapsData.push(fullLapData![i].lap);
+            }
+            calculateDeltas(lapsMetadata, lapsData);
+        }
+        console.log(lapLoadData);
+        if (lapLoadData.length > 0)
+        {
+            let data = [];
+            for (let i = 0; i < lapLoadData.length; i++)
+            {
+                data.push([lapLoadData[i].year, lapLoadData[i].round, lapLoadData[i].session, lapLoadData[i].driver, lapLoadData[i].lapNumber, lapLoadData[i].lapTime, lapLoadData[i].position]);
+            }
+
+            console.log(data);
+
+            fetchLaps(data, lapsMetadata, lapsData);
+        }
+
+        // fetchLaps([["2024", "22) Las Vegas Grand Prix", "Qualifying", "George Russell", 24, 92.312, 1], ["2024", "22) Las Vegas Grand Prix", "Qualifying", "Carlos Sainz", 23, 92.41, 2], ["2024", "22) Las Vegas Grand Prix", "Qualifying", "Pierre Gasly", 24, 92.664, 3]]);
+    }
 
     const calculateDeltas = (lapsMetadata: LapMetadata[], lapsData: TelemetryFrame[][]) => {
         if (lapsData.length > 0)
@@ -131,6 +171,13 @@ const SpeedDistance = () => {
 
             setLapsData(cLapsData);
             setLapsMetadata(lapsMetadata);
+
+            let saveData: FullLapData[] = [];
+            for (let i = 0; i < cLapsData.length; i++)
+            {
+                saveData.push({ lapMetadata: lapsMetadata[i], lap: cLapsData[i] });
+            }
+            setFullLapData(saveData);
         }
 
         else
@@ -156,7 +203,7 @@ const SpeedDistance = () => {
         }
     };
 
-    const fetchLaps = async (data: any[][]) => {
+    const fetchLaps = async (data: any[][], lapsMetadata: LapMetadata[], lapsData: TelemetryFrame[][]) => {
         const lapPromises = data.map(lap => 
             fetchSpeeds(lap[0], lap[1], lap[2], lap[3], lap[4], lap[5], lap[6])
         );
@@ -176,7 +223,8 @@ const SpeedDistance = () => {
     };
 
     useEffect(() => {
-        fetchLaps([["2024", "22) Las Vegas Grand Prix", "Qualifying", "George Russell", 24, 92.312, 1], ["2024", "22) Las Vegas Grand Prix", "Qualifying", "Carlos Sainz", 23, 92.41, 2], ["2024", "22) Las Vegas Grand Prix", "Qualifying", "Pierre Gasly", 24, 92.664, 3]]);
+        loadDataStart();
+        // fetchLaps([["2024", "22) Las Vegas Grand Prix", "Qualifying", "George Russell", 24, 92.312, 1], ["2024", "22) Las Vegas Grand Prix", "Qualifying", "Carlos Sainz", 23, 92.41, 2], ["2024", "22) Las Vegas Grand Prix", "Qualifying", "Pierre Gasly", 24, 92.664, 3]]);
     }, []);
 
     const CustomTooltip = ({active,payload,label,type,}: {active?: boolean;payload?: any[];label?: number;type: string;}) => {
@@ -289,9 +337,13 @@ const SpeedDistance = () => {
         <ThemeProvider theme={darkTheme}>
             <CssBaseline />
             <Navbar />
+            <Button onClick={(event) => {router.push("/speedDistance/chooseLaps")}}>
+                Add Laps
+            </Button>
             <Box sx={{ p: 2, height: "calc(100vh - 90px)" }}>
                 {lapsData.length > 0 ? (
                     <Box width="100%" height="100%">
+                        
                         <ResponsiveContainer width="100%" height="75%">
                             <LineChart>
                                 <CartesianGrid strokeDasharray="3 3" />

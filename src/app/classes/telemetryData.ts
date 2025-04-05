@@ -78,3 +78,8 @@ export class LapMetadata {
       this.colour = colour;
     }
 }
+
+export interface FullLapData {
+    lapMetadata: LapMetadata;
+    lap: TelemetryFrame[];
+}

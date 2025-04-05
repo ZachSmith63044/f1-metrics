@@ -5,6 +5,7 @@ import { useState } from "react";
 import darkTheme from "./theme";
 import { exo2, exo2Regular } from "./styles";
 import { CssBaseline, ThemeProvider, Stack, Typography } from "@mui/material";
+import { useStore } from "./store/store";
 
 
 
@@ -12,6 +13,9 @@ import Navbar from "./components/Navbar";
 import PageView from "./components/PageView";
 
 export default function Home() {
+  const setFullLapData = useStore((state) => state.setFullLapData);
+  const setLapLoadData = useStore((state) => state.setLapLoadData);
+  
   return (
     <ThemeProvider theme={darkTheme}>
       <CssBaseline />
@@ -46,7 +50,7 @@ export default function Home() {
           description="Analyse each lap's speed, throttle and braking, as well as comparing multiple drivers"
           title="Speed Distance"
           pageLink="/speedDistance"
-          onClick={() => console.log("Speed Time Clicked")}
+          onClick={() => {setFullLapData([]); setLapLoadData([]);}}
         />
         <PageView 
           url="https://firebasestorage.googleapis.com/v0/b/f1analysis-d2911.firebasestorage.app/o/Images%2FlapStrengths.png?alt=media&token=e4f50fa2-ec8b-45ad-b2b0-99d2ecc78743"
