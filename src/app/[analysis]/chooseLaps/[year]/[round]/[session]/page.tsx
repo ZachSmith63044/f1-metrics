@@ -275,7 +275,18 @@ const LapTimesChart = () => {
                                         {
                                             if (lapsData[i][j].isChecked == true)
                                             {
-                                                lapsDataLoad.push({ year: year, round: round, session: session, driver: driversData[i].firstName + " " + driversData[i].lastName, lapNumber: lapsData[i][j].lapNumber, lapTime: lapsData[i][j].lapTime, position: driverPositions.indexOf(i) + 1, colour: driversData[i].teamColour });
+                                                lapsDataLoad.push(
+                                                    new LapMetadata(
+                                                        year,
+                                                        round,
+                                                        session,
+                                                        driversData[i].firstName + " " + driversData[i].lastName,
+                                                        lapsData[i][j].lapNumber,
+                                                        lapsData[i][j].lapTime,
+                                                        driverPositions.indexOf(i) + 1,
+                                                        driversData[i].teamColour
+                                                    )
+                                                );
                                             }
                                         }
                                     }

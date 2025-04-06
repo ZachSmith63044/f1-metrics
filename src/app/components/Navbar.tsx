@@ -4,8 +4,9 @@ import React, { useState, useEffect } from 'react';
 import Link from "next/link";
 import { AppBar, Toolbar, Button, Box, Typography, Avatar } from "@mui/material";
 import { exo2, exo2Regular } from "../styles";
-import { onAuthStateChanged, User } from 'firebase/auth'; // Import User type
+import { onAuthStateChanged, User, getAuth } from 'firebase/auth'; // Import User type
 import { auth } from '../firebaseConfig';
+
 
 export default function Navbar() {
   const [user, setUser] = useState<User | null>(null); // Explicitly type as User | null

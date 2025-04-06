@@ -1,14 +1,11 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import styles from "../Home.module.css";
 import darkTheme from "../theme";
 import { auth } from "../firebaseConfig";
 import { TextField, Button, CssBaseline, ThemeProvider, Stack, Typography, Box } from "@mui/material";
-import { defaultTextField } from "../styles"; // Ensure correct spelling
-import { signInWithEmailAndPassword } from "firebase/auth";
 import Navbar from "../components/Navbar";
-import { exo2, exo2Regular } from "../styles";
+import { exo2 } from "../styles";
 import { onAuthStateChanged, signOut, User } from 'firebase/auth';
 
 export default function LogIn() {

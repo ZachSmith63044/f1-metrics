@@ -3,7 +3,7 @@ export class TelemetryFrame {
     gear: number;
     throttle: number;
     brake: number;
-    drs: boolean;
+    drs: number;
     x: number;
     y: number;
     time: number;
@@ -26,7 +26,7 @@ export class TelemetryFrame {
       this.gear = gear;
       this.throttle = throttle;
       this.brake = brake ? 1 : 0;
-      this.drs = drs;
+      this.drs = drs ? 1 : 0;
       this.x = x;
       this.y = y;
       this.time = time;
@@ -76,6 +76,32 @@ export class LapMetadata {
       this.lapTime = lapTime;
       this.position = position;
       this.colour = colour;
+    }
+
+    toMap(): Record<string, any> {
+        return {
+            year: this.year,
+            round: this.round,
+            session: this.session,
+            driver: this.driver,
+            lapNumber: this.lapNumber,
+            lapTime: this.lapTime,
+            position: this.position,
+            colour: this.colour,
+        };
+    }
+
+    static fromMap(data: Record<string, any>): LapMetadata {
+        return new LapMetadata(
+            data.year,
+            data.round,
+            data.session,
+            data.driver,
+            data.lapNumber,
+            data.lapTime,
+            data.position,
+            data.colour
+        );
     }
 }
 
