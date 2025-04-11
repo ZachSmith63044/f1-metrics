@@ -491,7 +491,7 @@ const SpeedDistance: React.FC<Props> = ({ userURL, fileURL }) => {
 
     const handleFileChange = (event: SelectChangeEvent<string>) => {
         setSelectedFile(event.target.value); // Update selected file ID
-      };
+    };
     
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();

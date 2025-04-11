@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Box, Typography, ThemeProvider, CssBaseline, Tab, Tabs, Checkbox, ToggleButtonGroup, ToggleButton, Button, Dialog, DialogTitle, DialogContent, DialogContentText, TextField, DialogActions, Snackbar } from "@mui/material";
+import { Box, Typography, ThemeProvider, CssBaseline, Tab, Tabs, Checkbox, ToggleButtonGroup, ToggleButton, Button, Dialog, DialogTitle, DialogContent, DialogContentText, TextField, DialogActions, Snackbar, FormControl, InputLabel, Select, MenuItem, SelectChangeEvent } from "@mui/material";
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import { LapData } from "../classes/lapData";
@@ -9,7 +9,7 @@ import { DriverData } from "../classes/driverData";
 import darkTheme from "../theme";
 import Navbar from "../components/Navbar";
 import { fetchSessionData } from "../utils/fetchSessionData";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { DataGrid, GridColDef } from '@mui/x-data-grid';
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { getAuth } from "firebase/auth";
@@ -51,12 +51,18 @@ const LapTimesChartPage: React.FC<Props> = ({ yearURL, roundURL, sessionURL, uid
     const [driverChosenVal, setDriverChosen] = useState<string>("Loading...");
     const [gridKey, setGridKey] = useState(0);
     const [driverDataLegend, setDriverDataLegend] = useState<DriverDataLegend[]>([]);
+    
+    const router = useRouter();
 
     const user = getAuth().currentUser;
 
     const [saveOpen, setSaveOpen] = useState<boolean>(false);
+    const [loadOpen, setLoadOpen] = useState<boolean>(false);
+
+    const [savedFiles, setSavedFiles] = useState<QueryDocumentSnapshot<DocumentData, DocumentData>[]>([]);
 
     const [saveName, setSaveName] = useState<string>("");
+    const [selectedFile, setSelectedFile] = useState<string>('');
 
     const [lineDataLapNumber, setLineDataLapNumber] = useState<DriverLapData[]>([]);
     const [lineDataTyreAge, setLineDataTyreAge] = useState<DriverLapData[]>([]);
@@ -82,6 +88,22 @@ const LapTimesChartPage: React.FC<Props> = ({ yearURL, roundURL, sessionURL, uid
     const [dotsShown, setDotsShown] = useState<"all" | "some" | "none">("all");
 
     const compoundColours: { [key: string]: string } = {"SOFT": "red", "MEDIUM": "yellow", "HARD": "lightgrey"};
+
+    
+    const fetchSavedFiles = async () => {
+        const lapsRef = collection(db, `users/${user!.uid}/lapTimesChart`);
+        const snapshot = await getDocs(lapsRef);
+
+        console.log(snapshot.docs);
+        
+        setSavedFiles(snapshot.docs);
+
+        if (snapshot.docs.length > 0)
+        {
+            setSelectedFile(snapshot.docs[0].id);
+            setLoadOpen(true);
+        }
+    }
 
 
     const [open, setOpen] = useState(false);
@@ -429,28 +451,28 @@ const LapTimesChartPage: React.FC<Props> = ({ yearURL, roundURL, sessionURL, uid
             headerName: 'Lap Time',
             width: 110,
             disableColumnMenu: true,
-            valueFormatter: (params: number) => params == -1 ? "nan" : formatLapTime(params),
+            valueFormatter: (params: number) => params == 9999 ? "nan" : formatLapTime(params),
         },
         {
             field: 'sector1Time',
             headerName: 'Sector 1',
             width: 100,
             disableColumnMenu: true,
-            valueFormatter: (params: number) => params == -1 ? "nan" : params.toFixed(3).padStart(6, '0'),
+            valueFormatter: (params: number) => params == 9999 ? "nan" : params.toFixed(3).padStart(6, '0'),
         },
         {
             field: 'sector2Time',
             headerName: 'Sector 2',
             width: 102,
             disableColumnMenu: true,
-            valueFormatter: (params: number) => params == -1 ? "nan" : params.toFixed(3).padStart(6, '0'),
+            valueFormatter: (params: number) => params == 9999 ? "nan" : params.toFixed(3).padStart(6, '0'),
         },
         {
             field: 'sector3Time',
             headerName: 'Sector 3',
             width: 102,
             disableColumnMenu: true,
-            valueFormatter: (params: number) => params == -1 ? "nan" : params.toFixed(3).padStart(6, '0'),
+            valueFormatter: (params: number) => params == 9999 ? "nan" : params.toFixed(3).padStart(6, '0'),
         },
         {
             field: 'compound',
@@ -687,6 +709,11 @@ const LapTimesChartPage: React.FC<Props> = ({ yearURL, roundURL, sessionURL, uid
             valueFormatter: (params: number) => params == -1 ? "nan" : params,
         },
     ];
+
+
+    const handleFileChange = (event: SelectChangeEvent<string>) => {
+        setSelectedFile(event.target.value); // Update selected file ID
+    };
     
 
     return (
@@ -762,7 +789,59 @@ const LapTimesChartPage: React.FC<Props> = ({ yearURL, roundURL, sessionURL, uid
                 <Button type="submit">Save</Button>
                 </DialogActions>
             </Dialog>
+            
+            <Dialog
+                open={loadOpen}
+                onClose={() => setLoadOpen(false)}
+                slotProps={{
+                    paper: {
+                    component: 'form',
+                    onSubmit: (event: React.FormEvent<HTMLFormElement>) => 
+                    {
+                        event.preventDefault();
+                        router.push(`/lapTimesChart/${yearURL}/${roundURL}/${sessionURL}/${user!.uid}/${selectedFile}`);
+                    },
+                    },
+                }}
+                >
+                <DialogTitle fontWeight={"bold"}>Load from user</DialogTitle>
+                <DialogContent>
+                    <DialogContentText mb={"14px"}>
+                    Select the analysis you want to load.
+                    </DialogContentText>
 
+                    <FormControl fullWidth variant="standard" required>
+                    <InputLabel id="file-select-label">File Name</InputLabel>
+                    <Select
+                        labelId="file-select-label"
+                        value={selectedFile}
+                        onChange={handleFileChange}
+                        label="File Name"
+                    >
+                        {savedFiles.map((docSnapshot) => {
+                        // Extract document ID or any other field you want to display from Firestore document
+                        const fileId = docSnapshot.id;
+                        return (
+                            <MenuItem key={fileId} value={fileId}>
+                            {fileId} {/* Or display any specific field from docSnapshot.data() */}
+                            </MenuItem>
+                        );
+                        })}
+                    </Select>
+                    </FormControl>
+
+                </DialogContent>
+                <DialogActions>
+                    <Button
+                        onClick={() => {
+                            setLoadOpen(false);
+                        }}
+                    >
+                        Cancel
+                    </Button>
+                    <Button type="submit">Load</Button>
+                </DialogActions>
+            </Dialog>
 
 
             {
@@ -874,6 +953,13 @@ const LapTimesChartPage: React.FC<Props> = ({ yearURL, roundURL, sessionURL, uid
                                 user != null && (
                                     <Button sx={{ ml: "8px" }} onClick={(event) => {setSaveOpen(true)}}>
                                         Save to user
+                                    </Button>
+                                )
+                            }
+                            {
+                                user != null && (
+                                    <Button sx={{ ml: "8px" }} onClick={(event) => {fetchSavedFiles()}}>
+                                        Load from user
                                     </Button>
                                 )
                             }

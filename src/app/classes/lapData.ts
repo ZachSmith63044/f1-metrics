@@ -45,11 +45,11 @@ export class LapData {
       isChecked?: boolean
     ) {
       this.time = time;
-      this.lapTime = lapTime;
+      this.lapTime = lapTime == -1 ? 9999 : lapTime;
       this.lapNumber = lapNumber;
-      this.sector1Time = sector1Time;
-      this.sector2Time = sector2Time;
-      this.sector3Time = sector3Time;
+      this.sector1Time = sector1Time == -1 ? 9999 : sector1Time;
+      this.sector2Time = sector2Time == -1 ? 9999 : sector2Time;
+      this.sector3Time = sector3Time == -1 ? 9999 : sector3Time;
       this.compound = compound;
       this.tyreLife = tyreLife;
       this.freshTyre = freshTyre;
