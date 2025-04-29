@@ -129,15 +129,23 @@ export default function SessionDash() {
                     <ToggleButton value="strategy" sx={toggleSx}>
                         Strategy
                     </ToggleButton>
-                    <ToggleButton value="positions" sx={toggleSx}>
-                        Position Changes
-                    </ToggleButton>
+                    {
+                        (session === "Race" || session === "Sprint") && (
+                            <ToggleButton value="positions" sx={toggleSx}>
+                                Position Changes
+                            </ToggleButton>
+                        )
+                    }
+
                     <ToggleButton value="laptimes" sx={toggleSx}>
                         Lap Times
                     </ToggleButton>
-                    <ToggleButton value="pitperformance" sx={toggleSx}>
-                        Pit Performance
-                    </ToggleButton>
+                    {
+                        session == "Race" &&
+                        <ToggleButton value="pitperformance" sx={toggleSx}>
+                            Pit Performance
+                        </ToggleButton>
+                    }
                     <ToggleButton value="maxspeed" sx={toggleSx}>
                         Min/Max Speed
                     </ToggleButton>

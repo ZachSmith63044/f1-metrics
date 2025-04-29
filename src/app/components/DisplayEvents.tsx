@@ -1,4 +1,4 @@
-import { Box, Button, Card, CardActionArea, CardActions, CardContent, CircularProgress, Divider, IconButton, Typography } from "@mui/material";
+import { Box, Button, Card, CardActionArea, CardActions, CardContent, CircularProgress, Divider, IconButton, Skeleton, Typography } from "@mui/material";
 import { F1Event } from "../utils/fetchYearData";
 import { getDownloadURL, ref } from "firebase/storage";
 import { storage } from "../firebaseConfig";
@@ -113,7 +113,7 @@ function EventCard({ event, eventNum }: EventCardProps) {
                         <Box flexDirection={"row"} display={"flex"} justifyContent="space-between" alignItems={"start"} width={"100%"}>
                             <Box flexDirection={"row"} display={"flex"} alignItems={"center"} gap={1.5}>
                                 <Typography fontWeight={"bold"} fontSize={22}>
-                                    {eventNum} - {event.event}
+                                    R{eventNum} - {event.event}
                                 </Typography>
 
                                 {loading ? (
@@ -143,7 +143,7 @@ function EventCard({ event, eventNum }: EventCardProps) {
                         </Box>
                         <Box flexDirection={"row"} display={"flex"} justifyContent="space-between" width={"100%"} padding={"17px"}>
                             {event.sessions.map(([sessionName], index) => (
-                                <Button key={index} variant="contained" disabled={!event.sessions[index][2]} sx={{ height: "50px", bgcolor: "#DDDDDD" }} onClick={() => {router.push(`/session/${event.date.slice(0, 4)}/${eventNum.toString().padStart(2, '0')}) ${event.event}/${sessionName}`)}}>
+                                <Button key={index} variant="contained" disabled={!event.sessions[index][2]} sx={{ height: "50px", bgcolor: "#DDDDDD" }} onClick={() => { router.push(`/session/${event.date.slice(0, 4)}/${eventNum.toString().padStart(2, '0')}) ${event.event}/${sessionName}`) }}>
                                     {sessionName}
                                 </Button>
                             ))}
@@ -162,7 +162,7 @@ function EventCard({ event, eventNum }: EventCardProps) {
                             <Box display="flex" flexDirection={"column"} alignItems="start" gap={0}>
                                 <Box display="flex" alignItems="center" gap={1.5}>
                                     <Typography fontWeight={"bold"} fontSize={22}>
-                                        {eventNum} - {event.event}
+                                        R{eventNum} - {event.event}
                                     </Typography>
 
                                     {loading ? (
@@ -316,7 +316,7 @@ function EventCard({ event, eventNum }: EventCardProps) {
                             <Box flexDirection={"row"} display={"flex"} justifyContent="space-between" width={"100%"}>
                                 <Box flexDirection={"row"} display={"flex"} alignItems={"center"} gap={1.5}>
                                     <Typography fontWeight={"bold"} fontSize={22}>
-                                        {eventNum} - {event.event}
+                                        R{eventNum} - {event.event}
                                     </Typography>
 
                                     {loading ? (
@@ -454,9 +454,35 @@ type EventListProps = {
 function EventList({ events }: EventListProps) {
     return (
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-            {events.map((event, index) => (
-                <EventCard key={index} event={event} eventNum={index} />
-            ))}
+            {
+                events.length == 0 ?
+                    Array.from({ length: 20 }).map((_, index) => (
+                        <Box
+                            key={index}
+                            sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 2,
+                                maxHeight: 150,
+                                width: '100%',
+                            }}
+                        >
+                            <Skeleton
+                                variant="rectangular"
+                                animation="wave"
+                                sx={{
+                                    height: 150,
+                                    width: '100%',
+                                    borderRadius: 2,
+                                }}
+                            />
+                        </Box>
+                    ))
+                    :
+                    events.map((event, index) => (
+                        <EventCard key={index} event={event} eventNum={index} />
+                    ))
+            }
         </div>
     );
 }
@@ -464,7 +490,7 @@ function EventList({ events }: EventListProps) {
 
 export function DisplayEvents({ events }: EventListProps) {
     return (
-        <Box padding={"20px"} sx={{width: '900px',maxWidth: '100%'}}>
+        <Box padding={"20px"} sx={{ width: '900px', maxWidth: '100%' }}>
             <EventList events={events} />
         </Box>
     );

@@ -19,6 +19,7 @@ export class LapData {
     pitOutTime: number;
     throttle: number;
     isChecked?: boolean;
+    isLoaded?: boolean;
     active?: boolean;
   
     // Constructor
@@ -42,7 +43,8 @@ export class LapData {
       pitInTime: number,
       pitOutTime: number,
       throttle: number,
-      isChecked?: boolean
+      isChecked?: boolean,
+      isLoaded?: boolean,
     ) {
       this.time = time;
       this.lapTime = lapTime == -1 ? 9999 : lapTime;
@@ -64,6 +66,7 @@ export class LapData {
       this.pitOutTime = pitOutTime;
       this.throttle = throttle;
       this.isChecked = isChecked == true;
+      this.isLoaded = isLoaded == true;
     }
   
     // Convert from an array (similar to the Dart fromList constructor)

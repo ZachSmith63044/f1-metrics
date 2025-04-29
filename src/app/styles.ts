@@ -11,3 +11,5 @@ export const defaultTextField = {
 
 export const exo2 = Exo_2({ weight: "700", subsets: ["latin"] });
 export const exo2Regular = Exo_2({ weight: "300", subsets: ["latin"] });
+
+

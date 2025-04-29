@@ -20,6 +20,7 @@
     "firebase": "^11.5.0",
     "firebase-admin": "^13.2.0",
     "firebase-functions": "^6.3.2",
+    "framer-motion": "^12.7.2",
     "html-to-image": "^1.11.13",
     "html2canvas": "^1.4.1",
     "next": "15.2.4",

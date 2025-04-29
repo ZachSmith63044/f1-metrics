@@ -110,7 +110,7 @@ const ChooseLaps: React.FC<ChooseLapsProps> = ({ laps, driversData, onChoose, is
                 let driversDesc = [];
 
                 for (let i = 0; i < driverPositionsEach.length; i++) {
-                    driversDesc.push(`${i + 1}) ${driverData[driverPositionsEach[i]].firstName} ${driverData[driverPositionsEach[i]].lastName}`);
+                    driversDesc.push(`${i + 1}) ${driverData[i].firstName} ${driverData[i].lastName}`);
                 }
 
                 if (driverPositionsEach.length > 0) {
@@ -310,10 +310,15 @@ const ChooseLaps: React.FC<ChooseLapsProps> = ({ laps, driversData, onChoose, is
                 const row = params.row as LapData;
                 return (
                     <div style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
-                        <Button disabled={row.isChecked}
+                        <Button
+                            style={
+                                {
+                                    color: row.isLoaded == true ? "#00FF00" : ""
+                                }
+                            }
                             onClick={() => {
                                 const newLapsData = [...lapsData];
-                                newLapsData[currentDriverIndex][row.lapNumber - 1].isChecked = true;
+                                newLapsData[currentDriverIndex][row.lapNumber - 1].isLoaded = !newLapsData[currentDriverIndex][row.lapNumber - 1].isLoaded;
 
                                 onChoose(laps[currentDriverIndex][row.lapNumber - 1], driversData[currentDriverIndex]);
 
@@ -322,7 +327,7 @@ const ChooseLaps: React.FC<ChooseLapsProps> = ({ laps, driversData, onChoose, is
                                 setLapsData(newLapsData);
                         }}
                         >
-                            Load Lap
+                            {row.isLoaded == true ? "Deselect" : "Load Lap"}
                         </Button>
                     </div>
                 );

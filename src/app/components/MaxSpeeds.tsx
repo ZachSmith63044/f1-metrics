@@ -58,9 +58,12 @@ const SpeedsChart: React.FC<SpeedsChartProps> = ({ laps, drivers }) => {
     useEffect(() => {
         const fetchSpeeds = async () => {
             try {
+                
+                console.log(laps);
+                console.log(drivers);
 
-                let allLapsData = laps;
-                let driversData = drivers;
+                let allLapsData = [...laps];
+                let driversData = [...drivers];
 
                 let fastestLapsData = [];
 
@@ -79,7 +82,6 @@ const SpeedsChart: React.FC<SpeedsChartProps> = ({ laps, drivers }) => {
                 }
 
 
-                console.log(fastestLapsData);
 
                 for (let i = fastestLapsData.length - 1; i > -1; i--) {
                     if (fastestLapsData[i].maxSpeed < 300 || fastestLapsData[i].minSpeed < 40 || fastestLapsData[i].throttle < 0.25) {
@@ -88,7 +90,6 @@ const SpeedsChart: React.FC<SpeedsChartProps> = ({ laps, drivers }) => {
                     }
                 }
 
-                console.log(fastestLapsData);
 
                 let fastestLapsTeams: LapData[] = [];
                 let teamsData: DriverData[] = [];
@@ -109,9 +110,6 @@ const SpeedsChart: React.FC<SpeedsChartProps> = ({ laps, drivers }) => {
                         teamsData.push(driversData[i]);
                     }
                 }
-
-                console.log(teamsIndex);
-
 
                 let minDriversSpeeds = [];
                 let minDriversSpeedBounds = new Bounds(999, 0);
@@ -206,8 +204,9 @@ const SpeedsChart: React.FC<SpeedsChartProps> = ({ laps, drivers }) => {
                 setThrottleDriverBounds(throttleDriversBounds);
                 setThrottleTeamData(throttleTeams);
                 setThrottleTeamBounds(throttleTeamsBounds);
-
-
+                
+                console.log(laps);
+                console.log(drivers);
             } catch (error) {
                 console.error("Error fetching pit performance data:", error);
             }

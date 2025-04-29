@@ -4,7 +4,7 @@ export function binToInt(data: boolean[], signed: boolean=false): number {
     {
         if (data[0])
         {
-            num -= 2 ** data.length;
+            num -= 2 ** (data.length - 1);
         }
     }
 

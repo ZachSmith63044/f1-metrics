@@ -19,6 +19,8 @@ export default function Navbar() {
     return () => unsubscribe();
   }, []);
 
+
+
   return (
     <AppBar position="static">
       <Toolbar>
@@ -35,7 +37,38 @@ export default function Navbar() {
             F1-Metrics
           </Typography>
         </Button>
-        <Box sx={{ marginLeft: "auto" }}>
+        <Box sx={{ marginLeft: "auto" }} flexDirection={"row"} display={"flex"} gap={2} alignItems={"center"}>
+          <Button
+            variant="outlined"
+            sx={{
+              color: 'red',
+              borderColor: 'red',
+              fontWeight: 'bold',
+              ml: 2,
+              textTransform: 'none',
+              fontFamily: exo2Regular.style.fontFamily,
+              display: 'flex',
+              alignItems: 'center',
+              px: 1.5,
+              py: 0.5,
+              borderRadius: '12px',
+              height: "38px"
+            }}
+            component={Link}
+            href="/liveDash"
+          >
+            <Box
+              sx={{
+                width: 10,
+                height: 10,
+                borderRadius: '50%',
+                backgroundColor: 'red',
+                marginRight: 1,
+                animation: 'flash 1s infinite ease-in-out',
+              }}
+            />
+            LIVE
+          </Button>
           {user ? (
             <Button
               color="inherit"
@@ -50,10 +83,10 @@ export default function Navbar() {
                   sx={{
                     width: 32,
                     height: 32,
-                    border: "2px solid lightgrey", // Light grey border
+                    border: "2px solid lightgrey",
                     marginRight: 1
                   }}
-                  
+
                 />
                 <Typography
                   sx={{ color: 'lightgrey', fontFamily: exo2.style.fontFamily, fontWeight: "700", fontSize: 22, }}
@@ -81,7 +114,7 @@ export default function Navbar() {
                 color="inherit"
                 component={Link}
                 href="/signup" // Use href instead of to
-                sx={{ textTransform: "none", ml: 1, fontFamily: exo2Regular.style.fontFamily }}
+                sx={{ textTransform: "none", fontFamily: exo2Regular.style.fontFamily }}
               >
                 Sign Up
               </Button>

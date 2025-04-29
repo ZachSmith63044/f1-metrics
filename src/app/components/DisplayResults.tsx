@@ -8,6 +8,7 @@ import {
     Paper,
     Typography,
     Box,
+    Skeleton,
 } from '@mui/material';
 import { PracticeResult, QualiResult, RaceResult } from '../utils/fetchResults';
 
@@ -81,59 +82,156 @@ export const RaceResultsTable: React.FC<RaceResultsTableProps> = ({ results, yea
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {results.map((result) => (
-                            <TableRow key={result.position}>
-                                <TableCell>
-                                    <Typography fontWeight={result.position <= 3 ? "bold" : "regular"} color={result.position <= 3 ? ["#ffc247", "#a8a8a8", "#CD7F32"][result.position - 1] : "#EAEAEA"}>
-                                        {result.position}
-                                    </Typography>
-                                </TableCell>
-                                <TableCell><Typography>{result.name}</Typography></TableCell>
-                                <TableCell><Typography>{result.team}</Typography></TableCell>
-                                <TableCell><Typography>{formatRaceTime(result, maxLaps)}</Typography></TableCell>
-                                <TableCell>
-                                    {fastestLap === result.fastestLap ? (
-                                        <Box display="flex" alignItems="center" gap={0.5}>
-                                            <AccessTimeIcon fontSize="small" sx={{ color: '#db34eb' }} />
-                                            <Typography fontWeight="bold" color="#db34eb">
-                                                {formatToMinSecMillis(result.fastestLap)}
-                                            </Typography>
-                                        </Box>
-                                    ) : (
-                                        <Typography>{formatToMinSecMillis(result.fastestLap)}</Typography>
-                                    )}
-                                </TableCell>
+                        {
+                            results.length == 0 ?
+                                Array.from({ length: 20 }).map((_, index) => (
+                                    <TableRow key={index}>
+                                        <TableCell>
+                                            <Skeleton
+                                                variant="rectangular"
+                                                animation="wave"
+                                                sx={{
+                                                    height: 30,
+                                                    width: 30,
+                                                    borderRadius: 2,
+                                                }}
+                                            />
+                                        </TableCell>
+                                        <TableCell>
+                                            <Skeleton
+                                                variant="rectangular"
+                                                animation="wave"
+                                                sx={{
+                                                    height: 30,
+                                                    width: 120,
+                                                    borderRadius: 2,
+                                                }}
+                                            />
+                                        </TableCell>
+                                        <TableCell>
+                                            <Skeleton
+                                                variant="rectangular"
+                                                animation="wave"
+                                                sx={{
+                                                    height: 30,
+                                                    width: 120,
+                                                    borderRadius: 2,
+                                                }}
+                                            />
+                                        </TableCell>
+                                        <TableCell>
+                                            <Skeleton
+                                                variant="rectangular"
+                                                animation="wave"
+                                                sx={{
+                                                    height: 30,
+                                                    width: 100,
+                                                    borderRadius: 2,
+                                                }}
+                                            />
+                                        </TableCell>
+                                        <TableCell>
+                                            <Skeleton
+                                                variant="rectangular"
+                                                animation="wave"
+                                                sx={{
+                                                    height: 30,
+                                                    width: 140,
+                                                    borderRadius: 2,
+                                                }}
+                                            />
+                                        </TableCell>
 
-                                <TableCell>
-                                    {(() => {
-                                        const diff = result.gridPos - result.position;
-                                        if (diff > 0) {
-                                            return (
-                                                <>
-                                                    <Box display={"flex"} flexDirection={"row"} alignItems={"center"}>
-                                                        <ArrowDropUpIcon fontSize="small" sx={{ color: 'green', verticalAlign: 'middle' }} />
-                                                        <Typography>{Math.abs(diff)}</Typography>
-                                                    </Box>
-                                                </>
-                                            );
-                                        } else if (diff < 0) {
-                                            return (
-                                                <>
-                                                    <Box display={"flex"} flexDirection={"row"} alignItems={"center"}>
-                                                        <ArrowDropDownIcon fontSize="small" sx={{ color: 'red', verticalAlign: 'middle' }} />
-                                                        <Typography>{Math.abs(diff)}</Typography>
-                                                    </Box>
-                                                </>
-                                            );
-                                        } else {
-                                            return <RemoveIcon fontSize="small" sx={{ color: 'gray' }} />;
-                                        }
-                                    })()}
-                                </TableCell>
-                                <TableCell><Typography>{result.points}</Typography></TableCell>
-                                <TableCell><Typography>{result.lapsCompleted}</Typography></TableCell>
-                            </TableRow>
-                        ))}
+                                        <TableCell>
+                                            <Skeleton
+                                                variant="rectangular"
+                                                animation="wave"
+                                                sx={{
+                                                    height: 30,
+                                                    width: 60,
+                                                    borderRadius: 2,
+                                                }}
+                                            />
+                                        </TableCell>
+                                        <TableCell>
+                                            <Skeleton
+                                                variant="rectangular"
+                                                animation="wave"
+                                                sx={{
+                                                    height: 30,
+                                                    width: 50,
+                                                    borderRadius: 2,
+                                                }}
+                                            />
+                                        </TableCell>
+                                        <TableCell>
+                                            <Skeleton
+                                                variant="rectangular"
+                                                animation="wave"
+                                                sx={{
+                                                    height: 30,
+                                                    width: 50,
+                                                    borderRadius: 2,
+                                                }}
+                                            />
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                                :
+                                results.map((result) => (
+                                    <TableRow key={result.position}>
+                                        <TableCell>
+                                            <Typography fontWeight={result.position <= 3 ? "bold" : "regular"} color={result.position <= 3 ? ["#ffc247", "#a8a8a8", "#CD7F32"][result.position - 1] : "#EAEAEA"}>
+                                                {result.position}
+                                            </Typography>
+                                        </TableCell>
+                                        <TableCell><Typography>{result.name}</Typography></TableCell>
+                                        <TableCell><Typography>{result.team}</Typography></TableCell>
+                                        <TableCell><Typography>{result.time > 0 ? formatRaceTime(result, maxLaps) : result.status}</Typography></TableCell>
+                                        <TableCell>
+                                            {fastestLap === result.fastestLap ? (
+                                                <Box display="flex" alignItems="center" gap={0.5}>
+                                                    <AccessTimeIcon fontSize="small" sx={{ color: '#db34eb' }} />
+                                                    <Typography fontWeight="bold" color="#db34eb">
+                                                        {formatToMinSecMillis(result.fastestLap)}
+                                                    </Typography>
+                                                </Box>
+                                            ) : (
+                                                <Typography>{formatToMinSecMillis(result.fastestLap)}</Typography>
+                                            )}
+                                        </TableCell>
+
+                                        <TableCell>
+                                            {(() => {
+                                                const diff = result.gridPos - result.position;
+                                                if (diff > 0) {
+                                                    return (
+                                                        <>
+                                                            <Box display={"flex"} flexDirection={"row"} alignItems={"center"}>
+                                                                <ArrowDropUpIcon fontSize="small" sx={{ color: 'green', verticalAlign: 'middle' }} />
+                                                                <Typography>{Math.abs(diff)}</Typography>
+                                                            </Box>
+                                                        </>
+                                                    );
+                                                } else if (diff < 0) {
+                                                    return (
+                                                        <>
+                                                            <Box display={"flex"} flexDirection={"row"} alignItems={"center"}>
+                                                                <ArrowDropDownIcon fontSize="small" sx={{ color: 'red', verticalAlign: 'middle' }} />
+                                                                <Typography>{Math.abs(diff)}</Typography>
+                                                            </Box>
+                                                        </>
+                                                    );
+                                                } else {
+                                                    return <RemoveIcon fontSize="small" sx={{ color: 'gray' }} />;
+                                                }
+                                            })()}
+                                        </TableCell>
+                                        <TableCell><Typography>{result.points}</Typography></TableCell>
+                                        <TableCell><Typography>{result.lapsCompleted}</Typography></TableCell>
+                                    </TableRow>
+                                ))
+                        }
                     </TableBody>
                 </Table>
             </TableContainer>

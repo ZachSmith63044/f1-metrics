@@ -63,7 +63,6 @@ interface DriverDataLegend {
 
 const LapChartGraph: React.FC<TyreStrategyChartProps> = ({ lapsData, driversData }) => {
 
-
     const compoundColours: { [key: string]: string } = {
         "SOFT": "#ff4c4c",
         "MEDIUM": "#f5e356",
@@ -85,8 +84,19 @@ const LapChartGraph: React.FC<TyreStrategyChartProps> = ({ lapsData, driversData
     const [minTyreAge, setMinTyreAge] = useState<number>(1);
     const [maxTyreAge, setMaxTyreAge] = useState<number>(78);
 
-    const [xAxisType, setXAxisType] = useState<"lap number" | "tyre age">("tyre age");
-    const [dotsShown, setDotsShown] = useState<"all" | "some" | "none">("all");
+    const [xAxisType, setXAxisType] = useState<"lap number" | "tyre age">(() => {
+        return (sessionStorage.getItem("xAxisType") as "lap number" | "tyre age") || "tyre age";
+    });
+    useEffect(() => {
+        sessionStorage.setItem("xAxisType", xAxisType);
+    }, [xAxisType]);
+
+    const [dotsShown, setDotsShown] = useState<"all" | "some" | "none">(() => {
+        return (sessionStorage.getItem("dotsShown") as "all" | "some" | "none") || "all";
+    });
+    useEffect(() => {
+        sessionStorage.setItem("dotsShown", dotsShown);
+    }, [dotsShown]);
 
     const [driverDataLegend, setDriverDataLegend] = useState<DriverDataLegend[]>([]);
 
@@ -119,6 +129,14 @@ const LapChartGraph: React.FC<TyreStrategyChartProps> = ({ lapsData, driversData
             let currentDriverLapData: DriverLapData = { driver: driversData[i], laps: [] };
             let currentDriverLapNumberData: DriverLapData = { driver: driversData[i], laps: [] };
             for (let j = 0; j < lapsData[i].length; j++) {
+                if (j > 0) {
+                    if (lapsData[i][j].stint != lapsData[i][j - 1].stint) {
+                        if (currentDriverLapData.laps.length != 0) {
+                            lineTyreAgeData.push(currentDriverLapData);
+                            currentDriverLapData = { driver: driversData[i], laps: [] };
+                        }
+                    }
+                }
                 if (lapsData[i][j].isChecked) {
                     currentDriverLapData.laps.push(lapsData[i][j]);
                     currentDriverLapNumberData.laps.push(lapsData[i][j]);
@@ -143,19 +161,19 @@ const LapChartGraph: React.FC<TyreStrategyChartProps> = ({ lapsData, driversData
                         minTyreAge = lapsData[i][j].tyreLife;
                     }
                 }
-                else {
-                    if (currentDriverLapData.laps.length != 0) {
-                        lineTyreAgeData.push(currentDriverLapData);
-                        currentDriverLapData = { driver: driversData[i], laps: [] };
-                    }
-                }
+                // else {
+                //     if (currentDriverLapData.laps.length != 0) {
+                //         lineTyreAgeData.push(currentDriverLapData);
+                //         currentDriverLapData = { driver: driversData[i], laps: [] };
+                //     }
+                // }
             }
             if (currentDriverLapData.laps.length != 0) {
                 lineTyreAgeData.push(currentDriverLapData);
             }
             if (currentDriverLapNumberData.laps.length != 0) {
                 lineLapNumberData.push(currentDriverLapNumberData);
-                
+
                 legendData.push({ driverName: driversData[i].firstName + " " + driversData[i].lastName, teamColour: driversData[i].teamColour, isDashed: legendData.map((x) => x.teamColour).includes(driversData[i].teamColour), position: driversData[i].position });
             }
         }
@@ -239,13 +257,15 @@ const LapChartGraph: React.FC<TyreStrategyChartProps> = ({ lapsData, driversData
             headerName: 'Driver Name',
             width: 160,
             disableColumnMenu: true,
+            resizable: false,
         },
         {
             field: "teamColour",
             headerName: "Legend",
-            width: 100,
+            width: 109,
             sortable: false,
             disableColumnMenu: true,
+            resizable: false,
             renderCell: (params: { row: { driverName: string; teamColour: any; isDashed: any; }; }) => (
                 <Button onClick={
                     (event) => {
@@ -275,13 +295,13 @@ const LapChartGraph: React.FC<TyreStrategyChartProps> = ({ lapsData, driversData
                 </Button>
             ),
         },
-        {
-            field: "position",
-            headerName: "Position",
-            width: 110,
-            disableColumnMenu: true,
-            valueFormatter: (params: number) => params == -1 ? "nan" : params,
-        },
+        // {
+        //     field: "position",
+        //     headerName: "Position",
+        //     width: 110,
+        //     disableColumnMenu: true,
+        //     valueFormatter: (params: number) => params == -1 ? "nan" : params,
+        // },
     ];
 
 
@@ -341,9 +361,9 @@ const LapChartGraph: React.FC<TyreStrategyChartProps> = ({ lapsData, driversData
                         </Box>
                     </Box>
 
-                    <Box width={375}>
+                    <Box width={270}>
                         <DataGrid
-                            style={{ width: 375 }}
+                            style={{ width: 270 }}
                             rows={driverDataLegend.map((row, index) => ({ ...row, id: index }))}
                             columns={legendColumns}
                             disableRowSelectionOnClick

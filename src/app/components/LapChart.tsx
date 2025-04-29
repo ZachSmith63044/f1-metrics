@@ -85,7 +85,7 @@ const LapChart: React.FC<LapChartProps> = ({ laps, drivers }) => {
                     }}
                 />
                 :
-                <ChooseLaps laps={laps} driversData={drivers} onChoose={() => {setKey(chartKey + 1)}} isCheckbox={false} />
+                <ChooseLaps laps={laps} driversData={drivers} onChoose={() => {setKey(chartKey + 1)}} isCheckbox={true} />
             }
         </Box>
     );
