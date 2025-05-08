@@ -1,7 +1,8 @@
 import { motion, useMotionValue, useSpring, useTransform, MotionValue, animate } from "framer-motion";
 import { useEffect, useState } from "react";
-import { LiveDriverData } from "../liveDash/page";
+import { LiveDriverData } from "../../liveDash/page";
 import { Pos } from "./TrackMapDisplay";
+import { LiveDriverTyre } from "@/app/utils/fetchLiveData";
 
 export const AnimatedDriverDot = ({
     name,
@@ -11,10 +12,13 @@ export const AnimatedDriverDot = ({
     rotationDeg,
     rotatedMinX,
     rotatedMinY,
+    rotatedMaxX,
+    rotatedMaxY,
     scale,
     offsetX,
     offsetY,
-    selected
+    position,
+    onSelected
 }: {
     name: string;
     colour: string;
@@ -23,15 +27,18 @@ export const AnimatedDriverDot = ({
     rotationDeg: number;
     rotatedMinX: number;
     rotatedMinY: number;
+    rotatedMaxX: number;
+    rotatedMaxY: number;
     scale: number;
     offsetX: number;
     offsetY: number;
-    selected: boolean;
+    position: number;
+    onSelected: Function;
 }) => {
     const [x, setX] = useState<number>(0);
     const [y, setY] = useState<number>(0);
-    const [delay, setDelay] = useState<number>(0.3);
-    const [showInfo, setShowInfo] = useState<boolean>(selected);
+    const [delay, setDelay] = useState<number>(0);
+    const [showInfo, setShowInfo] = useState<boolean>(false);
 
     const [speed, setSpeed] = useState<number>(0);
     const [gear, setGear] = useState<number>(0);
@@ -39,6 +46,14 @@ export const AnimatedDriverDot = ({
     const [brake, setBrake] = useState<boolean>(false);
     const [drs, setDrs] = useState<number>(0);
     const [telemDelay, setTelemDelay] = useState<number>(0.3);
+
+    const [interval, setInterval] = useState<number>(0);
+    const [gapToLeader, setGapToLeader] = useState<number>(0);
+
+    const [pos, setPos] = useState<number>(0); // 0=tl,1=tr,2=br,3=bl
+
+    const [tyre, setTyre] = useState<LiveDriverTyre>({ driverNum: 0, compound: "UNKNOWN", tyreAge: 0, time: new Date() });
+
 
 
     const rotatePoint = (p: Pos, center: Pos, angleRad: number): Pos => {
@@ -62,6 +77,10 @@ export const AnimatedDriverDot = ({
     };
 
     useEffect(() => {
+        onSelected(showInfo);
+    }, [showInfo]);
+
+    useEffect(() => {
         if (telemetry.position.length === 0) return;
 
         let timeout: ReturnType<typeof setTimeout> | null = null;
@@ -80,14 +99,34 @@ export const AnimatedDriverDot = ({
                 setX(next.x);
                 setY(next.y);
 
+
+                if (next.x < (rotatedMaxX + rotatedMinX) / 2) {
+                    if (next.y < (rotatedMaxY + rotatedMinY) / 2) {// 0=tl,1=tr,2=br,3=bl
+                        // tl
+                        setPos(2);
+                    }
+                    else {
+                        // bl
+                        setPos(1);
+                    }
+                }
+                else {
+                    if (next.y < (rotatedMaxY + rotatedMinY) / 2) {
+                        // tr
+                        setPos(3);
+                    }
+                    else {
+                        // br
+                        setPos(0);
+                    }
+                }
+
                 const delayMs = next.time.getTime() - now.getTime();
                 setDelay(delayMs / 1000);
 
-                console.log(delayMs);
                 timeout = setTimeout(updatePosition, delayMs);
             }
-            else
-            {
+            else {
                 console.log("NO NEXT!!!");
             }
         };
@@ -135,29 +174,124 @@ export const AnimatedDriverDot = ({
         };
     }, [telemetry.telemetry]);
 
+    useEffect(() => {
+        if (telemetry.intervals.length === 0) return;
+
+        let timeout2: ReturnType<typeof setTimeout> | null = null;
+
+        const updateInterval = () => {
+            const now = new Date();
+            const intervals = telemetry.intervals;
+
+            let timeUntil = -1;
+            let currentInterval;
+
+            for (let i = 0; i < intervals.length; i++) {
+                if (intervals[i].time.getTime() <= now.getTime()) {
+                    currentInterval = intervals[i];
+                } else {
+                    timeUntil = intervals[i].time.getTime() - now.getTime();
+                    break;
+                }
+            }
+
+            if (currentInterval) {
+                setInterval(currentInterval.interval);
+                setGapToLeader(currentInterval.gapToLeader);
+                timeout2 = setTimeout(updateInterval, timeUntil);
+            } else if (timeUntil !== -1) {
+                timeout2 = setTimeout(updateInterval, timeUntil);
+            }
+        };
+
+        updateInterval();
+
+        return () => {
+            if (timeout2) clearTimeout(timeout2);
+        };
+    }, [telemetry.intervals]);
+
+    useEffect(() => {
+        if (telemetry.tyres.length === 0) return;
+
+        let timeout2: ReturnType<typeof setTimeout> | null = null;
+
+        const updateTyres = () => {
+            const now = new Date();
+            const tyres = telemetry.tyres;
+
+            let timeUntil = -1;
+            let tyre: LiveDriverTyre = { driverNum: 0, compound: "UNKNOWN", tyreAge: 0, time: new Date() };
+
+            for (let i = 0; i < tyres.length; i++) {
+                if (tyres[i].time.getTime() <= now.getTime()) {
+                    tyre = tyres[i];
+                } else {
+                    timeUntil = tyres[i].time.getTime() - now.getTime();
+                    break;
+                }
+            }
+
+            if (tyre.compound != "UNKNOWN") {
+                setTyre(tyre);
+            }
+
+            if (timeUntil !== -1) {
+                timeout2 = setTimeout(updateTyres, timeUntil);
+            }
+        };
+
+        updateTyres();
+
+        return () => {
+            if (timeout2) clearTimeout(timeout2);
+        };
+    }, [telemetry.tyres]);
+
     const screenPos = rotatePointNew({ x, y });
+
+
 
     return (
         <motion.g
             animate={{ translateX: screenPos.x, translateY: screenPos.y }}
             transition={{ duration: delay, ease: "linear" }}
-            onClick={() => {setShowInfo(prev => !prev)}}
+            // transition={{ duration: delay, ease: "linear" }}
+            onClick={() => { setShowInfo(prev => !prev) }}
             style={{ cursor: "pointer" }}
         >
             {showInfo && (
                 <g transform="translate(0, -110)">
                     {/* Wider background to fit both */}
-                    <rect x={-106} y={-20} width={216} height={106} fill="#444444" rx={5} />
+                    <rect x={(pos == 0 || pos == 3) ? -200 : -20} y={(pos == 0 || pos == 1) ? -20 : 136} width={216} height={106} fill="#444444" rx={5} />
 
                     {/* Driver Tag on the left */}
-                    <foreignObject x={-100} y={18} width={70} height={40}>
+                    <foreignObject x={(pos == 0 || pos == 3) ? -188 : -8} y={(pos == 0 || pos == 1) ? (position == 1 || interval == 0 ? 5 : -8) : (position == 1 || interval == 0 ? 160 : 150)} width={70} height={40}>
                         <div>
-                            <DriverPositionTag position={1} name={name} colour={colour} />
+                            <DriverPositionTag position={position} name={name} colour={colour} />
                         </div>
                     </foreignObject>
 
+                    <foreignObject x={(pos == 0 || pos == 3) ? -205 : -25} y={(pos == 0 || pos == 1) ? (position == 1 || interval == 0 ? 43 : 48) : (position == 1 || interval == 0 ? 200 : 205)} width={80} height={40}>
+                        <div style={{ marginLeft: 20, display: 'flex', gap: 4, alignItems: "center", fontWeight: "bold" }}>
+                            <img
+                                src={`/tyres/${tyre.compound.toLowerCase()}.svg`}
+                                alt={tyre.compound}
+                                width={30}
+                                height={30}
+                            />
+                            {tyre.tyreAge}L
+                        </div>
+                    </foreignObject>
+                    {
+                        position != 1 && interval != -1 &&
+                        <text x={(pos == 0 || pos == 3) ? -154 : 26} y={(pos == 0 || pos == 1) ? 42 : 200} textAnchor="middle" fontWeight="bold" fill="white">
+                            +{interval.toFixed(3)}
+                        </text>
+                    }
+
                     {/* SpeedCircle on the right */}
-                    <g transform="translate(-10, -10)">
+                    <g transform={pos == 0 ? "translate(-104, -10)" : pos == 1 ? "translate(74, -10)" : pos == 2 ? "translate(74, 144)" : "translate(-104, 144)"}>
                         <SpeedCircle
                             speed={speed}
                             telemDelay={telemDelay}
@@ -184,7 +318,7 @@ export const SpeedCircle = ({
     brake,
     throttle,
     drs,
-    maxSpeed = 370,
+    maxSpeed = 360,
     colour = "lime",
     radius = 40,
     telemDelay = 0.3,
@@ -330,7 +464,7 @@ export const DriverPositionTag = ({
                 display: "flex",
                 alignItems: "center",
                 backgroundColor: colour,
-                borderRadius: "8px", // Slightly rounded
+                borderRadius: "8px",
                 padding: "4px 4px",
                 color: "white",
                 fontFamily: "sans-serif",
@@ -343,7 +477,7 @@ export const DriverPositionTag = ({
                 style={{
                     backgroundColor: "white",
                     color: colour,
-                    borderRadius: "6px", // Slightly rounded inner box
+                    borderRadius: "6px",
                     width: 100,
                     height: 22,
                     display: "flex",

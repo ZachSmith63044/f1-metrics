@@ -37,11 +37,13 @@ export class LiveDriver {
 	driver: string;
 	teamColour: string;
 	driverNumber: number;
+	selected: boolean;
 
 	constructor(driver: string, teamColour: string, driverNumber: number) {
 		this.driver = driver;
 		this.teamColour = "#" + teamColour;
 		this.driverNumber = driverNumber;
+		this.selected = false;
 	}
 
 	toString(): string {
@@ -82,9 +84,40 @@ export interface LivePosition {
 	driverNum: number;
 }
 
+export interface LiveDriverPosition {
+	driverNums: number[];
+	time: Date;
+}
+
+export interface LiveDriverInterval {
+	driverNum: number;
+	gapToLeader: number;
+	interval: number;
+	time: Date;
+}
+
+export interface LiveDriverSector {
+	driverNum: number;
+	duration: number;
+	pbDuration: number;
+	sectorNum: number;
+	time: Date;
+}
+
+export interface LiveDriverTyre {
+	driverNum: number;
+	tyreAge: number;
+	compound: string;
+	time: Date;
+}
+
 export interface LiveData {
 	telemetry: LiveTelemetry[];
 	positions: LivePosition[];
+	driverPositions: LiveDriverPosition[];
+	driverIntervals: LiveDriverInterval[];
+	driverSectors: LiveDriverSector[];
+	driverTyres: LiveDriverTyre[];
 }
 
 function formatDateCustom(date: Date): string {
@@ -151,6 +184,62 @@ export async function getLiveData(time: Date): Promise<LiveData> {
 		positions.push({ driverNum: driverNum, x: -x, y: y, time: timeSplit });
 	}
 
+	length = binToInt(boolList.splice(0, 7));
+
+	let driverPositions: LiveDriverPosition[] = [];
+
+	for (let i = 0; i < length; i++)
+	{
+		const timeAdd = binToInt(boolList.splice(0, 12));
+		let driverCount = binToInt(boolList.splice(0, 5));
+		let nums: number[] = [];
+		for (let j = 0; j < driverCount; j++)
+		{
+			const driverNum = binToInt(boolList.splice(0, 7));
+			nums.push(driverNum);
+		}
+		driverPositions.push({ driverNums: nums, time: new Date(time.getTime() + timeAdd) });
+	}
+
+	let driverIntervals: LiveDriverInterval[] = [];
+	length = binToInt(boolList.splice(0, 8));
+
+	for (let i = 0; i < length; i++)
+	{
+		let driverNum = binToInt(boolList.splice(0, 7));
+		let gapToLeader = binToInt(boolList.splice(0, 20))/1000;
+		let interval = binToInt(boolList.splice(0, 20))/1000;
+		const timeAdd = binToInt(boolList.splice(0, 12));
+		let timestamp = new Date(time.getTime() + timeAdd);
+		driverIntervals.push({ driverNum: driverNum, gapToLeader: gapToLeader, interval: interval, time: timestamp });
+	}
+
+	let driverSectors: LiveDriverSector[] = [];
+	length = binToInt(boolList.splice(0, 8));
+
+	for (let i = 0; i < length; i++)
+	{
+		let driverNum = binToInt(boolList.splice(0, 7));
+		let duration = binToInt(boolList.splice(0, 24))/1000;
+		let pbDuration = binToInt(boolList.splice(0, 24))/1000;
+		let sectorNum = binToInt(boolList.splice(0, 2));
+		const timeAdd = binToInt(boolList.splice(0, 12));
+		let timestamp = new Date(time.getTime() + timeAdd);
+		driverSectors.push({ driverNum: driverNum, duration: duration, pbDuration: pbDuration, sectorNum: sectorNum, time: timestamp });
+	}
+
+	let driverTyres: LiveDriverTyre[] = [];
+	length = binToInt(boolList.splice(0, 5));
+	let compounds = ["SOFT", "MEDIUM", "HARD", "INTERMEDIATE", "WET", "UNKNOWN"]
+
+	for (let i = 0; i < length; i++)
+	{
+		let driverNum = binToInt(boolList.splice(0, 7));
+		let compound = compounds[binToInt(boolList.splice(0, 3))];
+		let tyreAge = binToInt(boolList.splice(0, 7));
+		driverTyres.push({ driverNum: driverNum, compound: compound, tyreAge: tyreAge, time: time });
+	}
+
 
 	// bits.extend(integer(telem.driverNumber, 7))
 	//     bits.extend(integer(telem.speed, 9))
@@ -160,9 +249,10 @@ export async function getLiveData(time: Date): Promise<LiveData> {
 	//     bits.extend(integer(telem.gear - 1, 3))
 	//     bits.extend(integer(datetime_to_milliseconds_of_day(telem.time) % (delta * 1000), 12))
 
+	console.log(driverTyres);
+	console.log("LOADED UP");
 
-
-	return { telemetry: telem, positions: positions };
+	return { telemetry: telem, positions: positions, driverPositions: driverPositions, driverIntervals: driverIntervals, driverSectors: driverSectors, driverTyres: driverTyres };
 }
 
 export interface Pos {

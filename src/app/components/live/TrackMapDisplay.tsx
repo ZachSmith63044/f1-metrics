@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { LiveDriverData } from "../liveDash/page";
+import { LiveDriverData } from "../../liveDash/page";
 import { AnimatedDriverDot } from "./TrackMapDriver";
 
 export interface Pos {
@@ -15,6 +15,7 @@ interface TrackMapDisplayProps {
 	innerStroke?: number; // white thickness
 	rotationDeg?: number; // rotation in degrees
 	driversData: { [key: string]: LiveDriverData };
+	positions: number[];
 }
 
 const rotatePoint = (p: Pos, center: Pos, angleRad: number): Pos => {
@@ -37,11 +38,14 @@ export const TrackMapDisplay: React.FC<TrackMapDisplayProps> = ({
 	outerStroke = 50,
 	innerStroke = 5,
 	rotationDeg = 0,
-	driversData
+	driversData,
+	positions
 }) => {
 
 	const [rotatedMinXStored, setRotatedMinX] = useState<number>(0);
 	const [rotatedMinYStored, setRotatedMinY] = useState<number>(0);
+	const [rotatedMaxXStored, setRotatedMaxX] = useState<number>(0);
+	const [rotatedMaxYStored, setRotatedMaxY] = useState<number>(0);
 	const [scaleStored, setScale] = useState<number>(1);
 	const [offsetXStored, setOffsetX] = useState<number>(1);
 	const [offsetYStored, setOffsetY] = useState<number>(1);
@@ -65,7 +69,7 @@ export const TrackMapDisplay: React.FC<TrackMapDisplayProps> = ({
 		boxWidth: number,
 		boxHeight: number,
 		rotationDeg: number = 0,
-		padding: number = 50 // Add padding around the track (in pixels)
+		padding: number = 30 // Add padding around the track (in pixels)
 	): Pos[] => {
 		if (trackMap.length === 0) return [];
 
@@ -93,18 +97,20 @@ export const TrackMapDisplay: React.FC<TrackMapDisplayProps> = ({
 		const mapWidth = rotatedMaxX - rotatedMinX;
 		const mapHeight = rotatedMaxY - rotatedMinY;
 
-		const scale = Math.min(
-			(boxWidth - 2 * padding) / mapWidth,
-			(boxHeight - 2 * padding) / mapHeight
-		);
+		const usableWidth = boxWidth - 2 * padding;
+		const usableHeight = boxHeight - 2 * padding;
 
-		const offsetX = (boxWidth - mapWidth * scale) / 2 + padding;
-		const offsetY = padding + (boxHeight - 2 * padding - mapHeight * scale) / 2;
+		const scale = Math.min(usableWidth / mapWidth, usableHeight / mapHeight);
+
+		const offsetX = padding + (usableWidth - mapWidth * scale) / 2;
+		const offsetY = padding + (usableHeight - mapHeight * scale) / 2;
 
 		setOffsetX(offsetX);
 		setOffsetY(offsetY);
 		setRotatedMinX(rotatedMinX);
 		setRotatedMinY(rotatedMinY);
+		setRotatedMaxX(rotatedMaxX);
+		setRotatedMaxY(rotatedMaxY);
 		setScale(scale);
 
 		return rotated.map(p => ({
@@ -146,26 +152,46 @@ export const TrackMapDisplay: React.FC<TrackMapDisplayProps> = ({
 			/>
 
 			{
-				Object.entries(driversData).map(([driverId, data], index) => {
-					return (
-						<AnimatedDriverDot
-							key={driverId}
-							name={data.driver.driver}
-							colour={data.driver.teamColour}
-							telemetry={data}
-							rotationDeg={rotationDeg}
-							rotatedMinX={rotatedMinXStored}
-							rotatedMinY={rotatedMinYStored}
-							centre={centre}
-							offsetX={offsetXStored}
-							offsetY={offsetYStored}
-							scale={scaleStored}
-							selected={false}
-						/>
-					);
-				}
-				)
+				Object.entries(driversData)
+					.sort(([, a], [, b]) => {
+						const aSelected = a?.driver?.selected ?? false;
+						const bSelected = b?.driver?.selected ?? false;
+						return Number(aSelected) - Number(bSelected); // false < true
+					})
+					.map(([driverId, data]) => {
+						if (!data) return null;
+
+						const isSC = data.driver === undefined;
+						const isSelected = data.driver?.selected ?? false;
+
+						return (
+							<AnimatedDriverDot
+								key={driverId}
+								name={isSC ? "SC" : data.driver.driver}
+								colour={isSC ? "#DDDD00" : data.driver.teamColour}
+								telemetry={data}
+								rotationDeg={rotationDeg}
+								rotatedMinX={rotatedMinXStored}
+								rotatedMinY={rotatedMinYStored}
+								rotatedMaxX={rotatedMaxXStored}
+								rotatedMaxY={rotatedMaxYStored}
+								centre={centre}
+								offsetX={offsetXStored}
+								offsetY={offsetYStored}
+								scale={scaleStored}
+								position={isSC ? 0 : positions.indexOf(data.driver.driverNumber) + 1}
+								onSelected={(selected: boolean) => {
+									if (!isSC) data.driver.selected = selected;
+								}}
+							/>
+						);
+					})
 			}
+
+
+
+
+
 
 		</svg>
 	);
