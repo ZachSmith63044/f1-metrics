@@ -3,11 +3,12 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import darkTheme from "../theme";
-import { CssBaseline, ThemeProvider, Stack, Typography, Box } from "@mui/material";
+import { CssBaseline, ThemeProvider, Stack, Typography, Box, AppBar, Toolbar, IconButton } from "@mui/material";
 import Navbar from "../components/Navbar";
 import { getLiveData, getLiveDrivers, getLiveSession, getTrackMap, LiveData, LiveDriver, LiveDriverInterval, LiveDriverPosition, LiveDriverSector, LiveDriverTyre, LivePosition, LiveSession, LiveTelemetry, Pos } from "../utils/fetchLiveData";
 import { TrackMapDisplay } from "../components/live/TrackMapDisplay";
 import { DisplayDriverData } from "../components/live/DisplayDriverData";
+import HomeIcon from '@mui/icons-material/Home';
 
 export interface LiveDriverData {
     driver: LiveDriver;
@@ -24,9 +25,10 @@ export default function LiveDash() {
     const timeBefore = 1.25; // time before start to start download
 
     const [mapPoints, setMapPoints] = useState<Pos[]>([]);
-    const [sessionData, setSession] = useState<LiveSession>(new LiveSession("", "", 0));
+    const [sessionData, setSession] = useState<LiveSession>(new LiveSession("", "", 0, "", 0));
     const [telemetryData, setTelemetryData] = useState<{ [key: string]: LiveDriverData }>({});
     const [positionsKey, setPositionsKey] = useState<number>(0);
+    const [lapNumber, setLapNumber] = useState<number>(0);
 
     const hasRun = useRef(false);
     let driverData: LiveDriver[] = [];
@@ -158,6 +160,8 @@ export default function LiveDash() {
         setTelemetryData(newTelemetryData);
         console.log(newTelemetryData);
 
+        setLapNumber(liveData.lapNumber);
+
         setPositionsKey(prevKey => prevKey + 1); // Increment positionsKey to trigger re-render
         console.log(`Time taken: ${((new Date()).getTime() - startLoad.getTime()) / 1000}`);
         date = new Date(date.getTime() + 2500);
@@ -181,22 +185,107 @@ export default function LiveDash() {
         startSession();
     }, []);
 
+    const containerRef = useRef<HTMLDivElement>(null);
+    const [containerWidth, setContainerWidth] = useState(3200);
+    const [containerHeight, setContainerHeight] = useState(1400);
+    const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
+    useEffect(() => {
+        const updateSizes = () => {
+            setWindowWidth(window.innerWidth);
+            if (containerRef.current) {
+                const fullWidth = containerRef.current.offsetWidth;
+                const maxHeight = window.innerHeight * 0.6;
+                const maxMapWidth = (3 * maxHeight) / 2;
+                setContainerWidth(fullWidth); // -850
+                setContainerHeight(window.innerHeight * 0.75);
+            }
+        };
+
+        updateSizes();
+        window.addEventListener('resize', updateSizes);
+        return () => window.removeEventListener('resize', updateSizes);
+    }, []);
+
+    const mapHeight = (2 * containerWidth) / 3;
+    const isWide = windowWidth > 1650;
+
     return (
         <ThemeProvider theme={darkTheme}>
             <CssBaseline />
-            <Navbar />
 
-            <Box width={1200} height={800}>
-                <TrackMapDisplay
-                    points={mapPoints}
-                    width={1200}
-                    height={800}
-                    rotationDeg={sessionData.rotation - 4}
-                    driversData={telemetryData}
-                    positions={currentDriverPositions == undefined ? [] : currentDriverPositions.driverNums}
-                />
+            <AppBar position="static" color="default" elevation={2} sx={{ backgroundColor: '#121212' }}>
+                <Toolbar sx={{ justifyContent: 'space-between' }}>
+                    <Box display="flex" alignItems="center" gap={1}>
+                        <IconButton
+                            size="small"
+                            edge="start"
+                            color="inherit"
+                            aria-label="home"
+                            sx={{ p: 0.5 }}
+                            onClick={() => {
+                                // Replace this with your navigation logic
+                                window.location.href = '/';
+                            }}
+                        >
+                            <HomeIcon fontSize="small" />
+                        </IconButton>
+
+                        {/* Flag image */}
+                        {sessionData.country && (
+                            <img
+                                src={`/flags/${sessionData.country}.svg`}
+                                alt={`${sessionData.country} flag`}
+                                style={{ width: 30, height: 23, marginLeft: 4 }}
+                            />
+                        )}
+
+                        <Typography variant="h6" color="inherit" noWrap fontWeight="bold">
+                            {sessionData.name} — {sessionData.session}
+                        </Typography>
+                    </Box>
+
+                    <Typography variant="h6" color="inherit" noWrap>
+                        Lap {lapNumber}/{sessionData.laps}
+                    </Typography>
+                </Toolbar>
+            </AppBar>
+
+            <Box ref={containerRef} width="100%" px={1}>
+                <Box
+                    display="flex"
+                    flexDirection={isWide ? 'row' : 'column'}
+                    gap={2}
+                    alignItems={isWide ? 'flex-start' : 'center'}
+                    justifyContent="center"
+                    width="100%"
+                >
+                    <Box
+                        flexGrow={isWide ? 1 : 0}
+                        minWidth={isWide ? 600 : containerWidth}
+                        maxWidth={isWide ? 1400 : containerWidth}
+                        height={isWide ? containerHeight : mapHeight}
+                    >
+                        <TrackMapDisplay
+                            points={mapPoints}
+                            width={isWide ? containerWidth - 850 : containerWidth}
+                            height={isWide ? containerHeight : mapHeight}
+                            rotationDeg={sessionData.rotation - 4}
+                            driversData={telemetryData}
+                            positions={currentDriverPositions?.driverNums ?? []}
+                        />
+                    </Box>
+
+                    <Box flexShrink={0}>
+                        <DisplayDriverData
+                            positions={driverPositionsConst}
+                            drivers={telemetryData}
+                            showTelem={false}
+                        />
+                    </Box>
+                </Box>
             </Box>
-            <DisplayDriverData positions={driverPositionsConst} drivers={telemetryData} showTelem={true} />
         </ThemeProvider>
     );
+
 }

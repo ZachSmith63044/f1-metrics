@@ -6,15 +6,19 @@ export class LiveSession {
 	session: string;
 	name: string;
 	rotation: number;
+	country: string;
+	laps: number;
 
-	constructor(session: string, name: string, rotation: number) {
+	constructor(session: string, name: string, rotation: number, country: string, laps: number) {
 		this.session = session;
 		this.name = name;
 		this.rotation = rotation;
+		this.country = country;
+		this.laps = laps;
 	}
 
 	toString(): string {
-		return `LiveSession(session: ${this.session}, name: ${this.name})`;
+		return `LiveSession(session: ${this.session}, name: ${this.name}, country: ${this.country}, laps: ${this.laps})`;
 	}
 }
 
@@ -29,7 +33,9 @@ export async function getLiveSession(): Promise<LiveSession> {
 	return new LiveSession(
 		jsonData["session"],
 		jsonData["event"],
-		jsonData["rotation"]
+		jsonData["rotation"],
+		jsonData["country"],
+		jsonData["laps"]
 	);
 }
 
@@ -118,6 +124,7 @@ export interface LiveData {
 	driverIntervals: LiveDriverInterval[];
 	driverSectors: LiveDriverSector[];
 	driverTyres: LiveDriverTyre[];
+	lapNumber: number;
 }
 
 function formatDateCustom(date: Date): string {
@@ -241,6 +248,9 @@ export async function getLiveData(time: Date): Promise<LiveData> {
 	}
 
 
+	let lapNumber = binToInt(boolList.splice(0, 8));
+
+
 	// bits.extend(integer(telem.driverNumber, 7))
 	//     bits.extend(integer(telem.speed, 9))
 	//     bits.extend(integer(telem.throttle, 7))
@@ -252,7 +262,7 @@ export async function getLiveData(time: Date): Promise<LiveData> {
 	console.log(driverTyres);
 	console.log("LOADED UP");
 
-	return { telemetry: telem, positions: positions, driverPositions: driverPositions, driverIntervals: driverIntervals, driverSectors: driverSectors, driverTyres: driverTyres };
+	return { telemetry: telem, positions: positions, driverPositions: driverPositions, driverIntervals: driverIntervals, driverSectors: driverSectors, driverTyres: driverTyres, lapNumber: lapNumber };
 }
 
 export interface Pos {

@@ -116,19 +116,11 @@ function EventCard({ event, eventNum }: EventCardProps) {
                                     R{eventNum} - {event.event}
                                 </Typography>
 
-                                {loading ? (
-                                    <CircularProgress size={20} />
-                                ) : flagUrl ? (
-                                    <img
-                                        src={flagUrl}
-                                        alt={`${event.country} flag`}
-                                        style={{ height: "24px", borderRadius: "4px" }}
-                                    />
-                                ) : (
-                                    <Typography fontSize={12} color="textSecondary">
-                                        No Flag
-                                    </Typography>
-                                )}
+                                <img
+                                    src={`flags/${event.country}.svg`}
+                                    alt={`${event.country} flag`}
+                                    style={{ height: "24px", borderRadius: "4px" }}
+                                />
 
                                 <Typography fontSize={20} marginLeft={"10px"}>
                                     {new Date(event.date).toLocaleDateString("en-US", {
@@ -165,19 +157,11 @@ function EventCard({ event, eventNum }: EventCardProps) {
                                         R{eventNum} - {event.event}
                                     </Typography>
 
-                                    {loading ? (
-                                        <CircularProgress size={20} />
-                                    ) : flagUrl ? (
-                                        <img
-                                            src={flagUrl}
-                                            alt={`${event.country} flag`}
-                                            style={{ height: "24px", borderRadius: "4px" }}
-                                        />
-                                    ) : (
-                                        <Typography fontSize={12} color="textSecondary">
-                                            No Flag
-                                        </Typography>
-                                    )}
+                                    <img
+                                        src={`flags/${event.country}.svg`}
+                                        alt={`${event.country} flag`}
+                                        style={{ height: "24px", borderRadius: "4px" }}
+                                    />
 
                                     <Typography fontSize={20} marginLeft={"10px"}>
                                         {new Date(event.date).toLocaleDateString("en-US", {
@@ -319,19 +303,11 @@ function EventCard({ event, eventNum }: EventCardProps) {
                                         R{eventNum} - {event.event}
                                     </Typography>
 
-                                    {loading ? (
-                                        <CircularProgress size={20} />
-                                    ) : flagUrl ? (
-                                        <img
-                                            src={flagUrl}
-                                            alt={`${event.country} flag`}
-                                            style={{ height: "24px", borderRadius: "4px" }}
-                                        />
-                                    ) : (
-                                        <Typography fontSize={12} color="textSecondary">
-                                            No Flag
-                                        </Typography>
-                                    )}
+                                    <img
+                                        src={`flags/${event.country}.svg`}
+                                        alt={`${event.country} flag`}
+                                        style={{ height: "24px", borderRadius: "4px" }}
+                                    />
 
                                     <Typography fontSize={20} marginLeft={"10px"}>
                                         {new Date(event.date).toLocaleDateString("en-US", {
