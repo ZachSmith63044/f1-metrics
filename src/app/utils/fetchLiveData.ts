@@ -8,13 +8,15 @@ export class LiveSession {
 	rotation: number;
 	country: string;
 	laps: number;
+	marshalSectors: number[];
 
-	constructor(session: string, name: string, rotation: number, country: string, laps: number) {
+	constructor(session: string, name: string, rotation: number, country: string, laps: number, marshalSectors: number[]) {
 		this.session = session;
 		this.name = name;
 		this.rotation = rotation;
 		this.country = country;
 		this.laps = laps;
+		this.marshalSectors = marshalSectors;
 	}
 
 	toString(): string {
@@ -35,7 +37,8 @@ export async function getLiveSession(): Promise<LiveSession> {
 		jsonData["event"],
 		jsonData["rotation"],
 		jsonData["country"],
-		jsonData["laps"]
+		jsonData["laps"],
+		jsonData["marshals"]
 	);
 }
 
@@ -117,6 +120,11 @@ export interface LiveDriverTyre {
 	time: Date;
 }
 
+export interface LiveMarshalSectors {
+	sectorStates: number[];
+	time: Date;
+}
+
 export interface LiveData {
 	telemetry: LiveTelemetry[];
 	positions: LivePosition[];
@@ -125,6 +133,7 @@ export interface LiveData {
 	driverSectors: LiveDriverSector[];
 	driverTyres: LiveDriverTyre[];
 	lapNumber: number;
+	marshalSectors: LiveMarshalSectors[];
 }
 
 function formatDateCustom(date: Date): string {
@@ -148,7 +157,7 @@ function formatDateCustom(date: Date): string {
 	return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}${microseconds}+00:00.l`;
 }
 
-export async function getLiveData(time: Date): Promise<LiveData> {
+export async function getLiveData(time: Date, marshalSectorsNum: number): Promise<LiveData> {
 	const sessionRef: StorageReference = ref(storage, `LiveData/${formatDateCustom(time)}`);
 	const blob = await getBlob(sessionRef);
 	const arrayBuffer = await blob.arrayBuffer();
@@ -250,6 +259,20 @@ export async function getLiveData(time: Date): Promise<LiveData> {
 
 	let lapNumber = binToInt(boolList.splice(0, 8));
 
+	let marshalSectorsFull: LiveMarshalSectors[] = [];
+
+	length = binToInt(boolList.splice(0, 3));
+	for (let i = 0; i < length; i++)
+	{
+		let timeSeconds = binToInt(boolList.splice(0, 2));
+		let marshalSectors = [];
+		for (let j = 0; j < marshalSectorsNum; j++)
+		{
+			marshalSectors.push(binToInt(boolList.splice(0, 3)));
+		}
+		marshalSectorsFull.push({ sectorStates: marshalSectors, time: new Date(time.getTime() + timeSeconds * 1000) });
+	}
+
 
 	// bits.extend(integer(telem.driverNumber, 7))
 	//     bits.extend(integer(telem.speed, 9))
@@ -262,7 +285,7 @@ export async function getLiveData(time: Date): Promise<LiveData> {
 	console.log(driverTyres);
 	console.log("LOADED UP");
 
-	return { telemetry: telem, positions: positions, driverPositions: driverPositions, driverIntervals: driverIntervals, driverSectors: driverSectors, driverTyres: driverTyres, lapNumber: lapNumber };
+	return { telemetry: telem, positions: positions, driverPositions: driverPositions, driverIntervals: driverIntervals, driverSectors: driverSectors, driverTyres: driverTyres, lapNumber: lapNumber, marshalSectors: marshalSectorsFull };
 }
 
 export interface Pos {

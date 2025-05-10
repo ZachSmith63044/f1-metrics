@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useMemo, useState } from "react";
 import { LiveDriverData } from "../../liveDash/page";
 import { AnimatedDriverDot } from "./TrackMapDriver";
@@ -16,6 +18,8 @@ interface TrackMapDisplayProps {
 	rotationDeg?: number; // rotation in degrees
 	driversData: { [key: string]: LiveDriverData };
 	positions: number[];
+	marshalSectors: number[];
+	sectorStates: number[]; // 0=white,1=yellow,2=doubleyellow
 }
 
 const rotatePoint = (p: Pos, center: Pos, angleRad: number): Pos => {
@@ -39,7 +43,9 @@ export const TrackMapDisplay: React.FC<TrackMapDisplayProps> = ({
 	innerStroke = 5,
 	rotationDeg = 0,
 	driversData,
-	positions
+	positions,
+	marshalSectors,
+	sectorStates
 }) => {
 
 	const [rotatedMinXStored, setRotatedMinX] = useState<number>(0);
@@ -142,13 +148,11 @@ export const TrackMapDisplay: React.FC<TrackMapDisplayProps> = ({
 				strokeLinejoin="round"
 				strokeLinecap="round"
 			/>
-			<polyline
+			<MultiColorPolyline
 				points={polyline}
-				stroke="white"
-				strokeWidth={innerStroke}
-				fill="none"
-				strokeLinejoin="round"
-				strokeLinecap="round"
+				percentages={marshalSectors}
+				sectors={sectorStates}
+				strokeWidth={3}
 			/>
 
 			{
@@ -194,5 +198,107 @@ export const TrackMapDisplay: React.FC<TrackMapDisplayProps> = ({
 
 
 		</svg>
+	);
+};
+
+
+
+function getDistance([x1, y1]: number[], [x2, y2]: number[]) {
+	return Math.hypot(x2 - x1, y2 - y1);
+}
+
+function interpolatePoint([x1, y1]: number[], [x2, y2]: number[], ratio: number): [number, number] {
+	return [x1 + (x2 - x1) * ratio, y1 + (y2 - y1) * ratio];
+}
+
+function getSegmentedPolylines(points: string, percentages: number[]): [number, number][][] {
+	const parsed = points
+		.trim()
+		.split(' ')
+		.map(p => p.split(',').map(Number) as [number, number]);
+
+	// Total length
+	const lengths: number[] = [0];
+	for (let i = 1; i < parsed.length; i++) {
+		lengths[i] = lengths[i - 1] + getDistance(parsed[i - 1], parsed[i]);
+	}
+	const totalLength = lengths[lengths.length - 1];
+
+	// Add 0 at start to define first range
+	const allPercents = [0, ...percentages];
+	const targetLengths = allPercents.map(p => p * totalLength);
+
+	const segments: [number, number][][] = [];
+
+	let currentIndex = 0;
+	let currentSegment: [number, number][] = [];
+
+	for (let t = 1; t < targetLengths.length; t++) {
+		const segmentPoints: [number, number][] = [];
+
+		let segStart = targetLengths[t - 1];
+		let segEnd = targetLengths[t];
+		let i = currentIndex;
+
+		// Move i to the segment start
+		while (i < lengths.length - 1 && lengths[i + 1] < segStart) i++;
+		currentIndex = i;
+
+		let remainingStart = segStart;
+		let remainingEnd = segEnd;
+
+		// Find start point
+		if (lengths[i] <= segStart && segStart <= lengths[i + 1]) {
+			const localRatio = (segStart - lengths[i]) / (lengths[i + 1] - lengths[i]);
+			segmentPoints.push(interpolatePoint(parsed[i], parsed[i + 1], localRatio));
+		}
+
+		// Add all points inside this range
+		while (i < parsed.length - 1 && lengths[i + 1] < segEnd) {
+			segmentPoints.push(parsed[i + 1]);
+			i++;
+		}
+
+		// Find end point
+		if (lengths[i] <= segEnd && segEnd <= lengths[i + 1]) {
+			const localRatio = (segEnd - lengths[i]) / (lengths[i + 1] - lengths[i]);
+			segmentPoints.push(interpolatePoint(parsed[i], parsed[i + 1], localRatio));
+		}
+
+		segments.push(segmentPoints);
+	}
+
+	return segments;
+}
+
+interface MultiColorPolylineProps {
+	points: string;
+	percentages: number[]; // e.g., [0.1, 0.2, ..., 1]
+	sectors: number[];
+	strokeWidth?: number;
+}
+
+export const MultiColorPolyline = ({
+	points,
+	percentages,
+	sectors,
+	strokeWidth = 4
+}: MultiColorPolylineProps) => {
+	const segments = getSegmentedPolylines(points, percentages);
+
+	return (
+		<g>
+			{segments.map((segment, i) => (
+				<polyline
+					key={i}
+					points={segment.map(p => p.join(',')).join(' ')}
+					stroke={["white", "yellow", "yellow", "red"][sectors[i]]}
+					strokeWidth={[3, 6, 6, 6, 6][sectors[i]]}
+					fill="none"
+					strokeLinejoin="round"
+					strokeLinecap="round"
+				/>
+			))}
+		</g>
 	);
 };

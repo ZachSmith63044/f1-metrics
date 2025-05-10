@@ -1,3 +1,5 @@
+"use client";
+
 import { motion, useMotionValue, useSpring, useTransform, MotionValue, animate } from "framer-motion";
 import { useEffect, useState } from "react";
 import { LiveDriverData } from "../../liveDash/page";

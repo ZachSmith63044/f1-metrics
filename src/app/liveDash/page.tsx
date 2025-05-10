@@ -5,7 +5,7 @@ import React, { useEffect, useRef, useState } from "react";
 import darkTheme from "../theme";
 import { CssBaseline, ThemeProvider, Stack, Typography, Box, AppBar, Toolbar, IconButton } from "@mui/material";
 import Navbar from "../components/Navbar";
-import { getLiveData, getLiveDrivers, getLiveSession, getTrackMap, LiveData, LiveDriver, LiveDriverInterval, LiveDriverPosition, LiveDriverSector, LiveDriverTyre, LivePosition, LiveSession, LiveTelemetry, Pos } from "../utils/fetchLiveData";
+import { getLiveData, getLiveDrivers, getLiveSession, getTrackMap, LiveData, LiveDriver, LiveDriverInterval, LiveDriverPosition, LiveDriverSector, LiveDriverTyre, LiveMarshalSectors, LivePosition, LiveSession, LiveTelemetry, Pos } from "../utils/fetchLiveData";
 import { TrackMapDisplay } from "../components/live/TrackMapDisplay";
 import { DisplayDriverData } from "../components/live/DisplayDriverData";
 import HomeIcon from '@mui/icons-material/Home';
@@ -20,15 +20,17 @@ export interface LiveDriverData {
 }
 
 export default function LiveDash() {
-    let date: Date = new Date("2025-05-04T20:10:00+00:00");
+    let date: Date = new Date("2025-05-04T20:03:00+00:00");
     const delayRef = useRef(0);
     const timeBefore = 1.25; // time before start to start download
 
     const [mapPoints, setMapPoints] = useState<Pos[]>([]);
-    const [sessionData, setSession] = useState<LiveSession>(new LiveSession("", "", 0, "", 0));
+    const [sessionData, setSession] = useState<LiveSession>(new LiveSession("", "", 0, "", 0, []));
     const [telemetryData, setTelemetryData] = useState<{ [key: string]: LiveDriverData }>({});
     const [positionsKey, setPositionsKey] = useState<number>(0);
     const [lapNumber, setLapNumber] = useState<number>(0);
+
+    const [marshalSectors, setMarshalSectors] = useState<LiveMarshalSectors[]>([]);
 
     const hasRun = useRef(false);
     let driverData: LiveDriver[] = [];
@@ -54,7 +56,7 @@ export default function LiveDash() {
 
     const loadData = async () => {
         let startLoad = new Date();
-        let liveData: LiveData = await getLiveData(date);
+        let liveData: LiveData = await getLiveData(date, 20);
         let telem = liveData.telemetry;
         let newTelemetryData = { ...telemetryData }; // Create a copy to update
 
@@ -152,13 +154,27 @@ export default function LiveDash() {
             console.log("POS SET ABOVE");
         }
 
-        console.log(driverPositions.length);
-        console.log("DRIVER-POS SET ABOVE");
+
+        let liveMarshalSectors: LiveMarshalSectors[] = liveData.marshalSectors;
+
+        for (let i = 0; i < liveMarshalSectors.length; i++)
+        {
+            liveMarshalSectors[i].time =  new Date(liveMarshalSectors[i].time.getTime() + delayRef.current * 1000 - timeBefore * 1000 + 350);
+        }
+
+        let allSectors = [...marshalSectors, ...liveMarshalSectors];
+
+        setMarshalSectors(allSectors);
+
+        console.log(allSectors);
+
+        console.log(liveData);
+
+
         setDriverPositions([...driverPositions]);
 
         // Update state with the new telemetry data
         setTelemetryData(newTelemetryData);
-        console.log(newTelemetryData);
 
         setLapNumber(liveData.lapNumber);
 
@@ -273,6 +289,8 @@ export default function LiveDash() {
                             rotationDeg={sessionData.rotation - 4}
                             driversData={telemetryData}
                             positions={currentDriverPositions?.driverNums ?? []}
+                            marshalSectors={sessionData.marshalSectors}
+                            sectorStates={marshalSectors.length > 0 ? marshalSectors[marshalSectors.length - 1].sectorStates : [2, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}
                         />
                     </Box>
 
