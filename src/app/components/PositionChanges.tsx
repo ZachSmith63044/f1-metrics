@@ -44,7 +44,10 @@ const PositionChanges: React.FC<PositionChangesProps> = ({ laps, drivers }) => {
             const lapData = driverLaps[lapIndex];
             if (lapData) {
                 const driverName = drivers[driverIndex].lastName;
-                lapEntry[driverName] = lapData.position;
+                if (lapData.position != -1)
+                {
+                    lapEntry[driverName] = lapData.position;
+                }
             }
         });
         chartData.push(lapEntry);
@@ -91,7 +94,7 @@ const PositionChanges: React.FC<PositionChangesProps> = ({ laps, drivers }) => {
         <ResponsiveContainer width="100%" height={"100%"}>
             <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
                 <XAxis dataKey="lapNum" label={{ value: "Lap Number", position: "insideBottom", offset: 6, fill: 'white' }} height={45} tick={{ fill: 'white' }} />
-                <YAxis reversed={true} tick={{ fill: 'white' }} tickFormatter={(value) => {return `${value}) ${drivers[value - 1].lastName}`}} width={110} domain={[1, laps.length]} tickCount={laps.length} orientation="right" />
+                <YAxis reversed={true} tick={{ fill: 'white' }} tickFormatter={(value) => {return `${value}) ${drivers[value - 1] == undefined ? "undefined" : drivers[value - 1].lastName}`}} width={110} domain={[1, laps.length]} tickCount={laps.length} orientation="right" />
                 <Tooltip content={<CustomTooltip />} />
                 <Legend
                     formatter={(value: string) => {

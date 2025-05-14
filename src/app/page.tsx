@@ -62,7 +62,7 @@ export default function Home() {
         <ThemeProvider theme={darkTheme}>
             <CssBaseline />
             <Navbar />
-            <Box justifyContent={"center"} justifyItems={"center"} mt={"20px"}>
+            <Box display="flex" flexDirection="column" justifyContent="center" alignItems="center" mt="20px">
                 <ToggleButtonGroup
                     value={selection}
                     exclusive
@@ -106,14 +106,14 @@ export default function Home() {
                         </Box>
                         :
                         (
-                        selection == "drivers" ?
-                            <Box display="flex" justifyContent="center">
-                                <DisplayDriverStandings standings={standings.drivers} />
-                            </Box>
-                            :
-                            <Box display="flex" justifyContent="center">
-                                <DisplayConstructorStandings standings={standings.teams} />
-                            </Box>
+                            selection == "drivers" ?
+                                <Box display="flex" justifyContent="center">
+                                    <DisplayDriverStandings standings={standings.drivers} />
+                                </Box>
+                                :
+                                <Box display="flex" justifyContent="center">
+                                    <DisplayConstructorStandings standings={standings.teams} />
+                                </Box>
                         )
                 }
             </Box>

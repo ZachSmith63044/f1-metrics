@@ -18,8 +18,8 @@ interface TrackMapDisplayProps {
 	rotationDeg?: number; // rotation in degrees
 	driversData: { [key: string]: LiveDriverData };
 	positions: number[];
-	marshalSectors: number[];
-	sectorStates: number[]; // 0=white,1=yellow,2=doubleyellow
+	// marshalSectors: number[];
+	// sectorStates: number[]; // 0=white,1=yellow,2=doubleyellow
 }
 
 const rotatePoint = (p: Pos, center: Pos, angleRad: number): Pos => {
@@ -44,8 +44,6 @@ export const TrackMapDisplay: React.FC<TrackMapDisplayProps> = ({
 	rotationDeg = 0,
 	driversData,
 	positions,
-	marshalSectors,
-	sectorStates
 }) => {
 
 	const [rotatedMinXStored, setRotatedMinX] = useState<number>(0);
@@ -148,12 +146,20 @@ export const TrackMapDisplay: React.FC<TrackMapDisplayProps> = ({
 				strokeLinejoin="round"
 				strokeLinecap="round"
 			/>
-			<MultiColorPolyline
+			<polyline
+				points={polyline}
+				stroke="white"
+				strokeWidth={innerStroke}
+				fill="none"
+				strokeLinejoin="round"
+				strokeLinecap="round"
+			/>
+			{/* <MultiColorPolyline
 				points={polyline}
 				percentages={marshalSectors}
 				sectors={sectorStates}
 				strokeWidth={3}
-			/>
+			/> */}
 
 			{
 				Object.entries(driversData)

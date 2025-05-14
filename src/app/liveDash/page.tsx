@@ -5,10 +5,12 @@ import React, { useEffect, useRef, useState } from "react";
 import darkTheme from "../theme";
 import { CssBaseline, ThemeProvider, Stack, Typography, Box, AppBar, Toolbar, IconButton } from "@mui/material";
 import Navbar from "../components/Navbar";
-import { getLiveData, getLiveDrivers, getLiveSession, getTrackMap, LiveData, LiveDriver, LiveDriverInterval, LiveDriverPosition, LiveDriverSector, LiveDriverTyre, LiveMarshalSectors, LivePosition, LiveSession, LiveTelemetry, Pos } from "../utils/fetchLiveData";
+import { getAllLaps, getLiveData, getLiveDrivers, getLiveSession, getTrackMap, LiveData, LiveDriver, LiveDriverInterval, LiveDriverPosition, LiveDriverSector, LiveDriverTyre, LiveLapData, LivePosition, LiveSession, LiveTelemetry, Pos } from "../utils/fetchLiveData";
 import { TrackMapDisplay } from "../components/live/TrackMapDisplay";
 import { DisplayDriverData } from "../components/live/DisplayDriverData";
 import HomeIcon from '@mui/icons-material/Home';
+import { fetchLiveTelemetryData } from "../utils/fetchTelemetryData";
+import { LiveAnalysis } from "../components/live/LiveAnalysis";
 
 export interface LiveDriverData {
     driver: LiveDriver;
@@ -20,7 +22,7 @@ export interface LiveDriverData {
 }
 
 export default function LiveDash() {
-    let date: Date = new Date("2025-05-04T20:03:00+00:00");
+    let date: Date = new Date("2025-05-04T20:08:50+00:00");
     const delayRef = useRef(0);
     const timeBefore = 1.25; // time before start to start download
 
@@ -30,28 +32,38 @@ export default function LiveDash() {
     const [positionsKey, setPositionsKey] = useState<number>(0);
     const [lapNumber, setLapNumber] = useState<number>(0);
 
-    const [marshalSectors, setMarshalSectors] = useState<LiveMarshalSectors[]>([]);
+    const [trackState, setTrackState] = useState<number>(0);
+
+    const [liveLapsAnalysis, setLiveLapsAnalysis] = useState<Record<number, LiveLapData[]>>({});
+
+    // const [marshalSectors, setMarshalSectors] = useState<LiveMarshalSectors[]>([]);
 
     const hasRun = useRef(false);
     let driverData: LiveDriver[] = [];
+    const [driverDataConst, setDriverDataConst] = useState<LiveDriver[]>([]);
     let driverPositions: LiveDriverPosition[] = [];
     const [driverPositionsConst, setDriverPositions] = useState<LiveDriverPosition[]>([]);
     const [currentDriverPositions, setCurrentPosition] = useState<LiveDriverPosition | undefined>();
-    const [driverIntervals, setDriverIntervals] = useState<LiveDriverInterval[]>([]);
+    const [liveDriverPositions, setLiveDriverPositions] = useState<number[]>([]);
+    // const [driverIntervals, setDriverIntervals] = useState<LiveDriverInterval[]>([]);
+
+    const loadLiveAnalysis = async () => {
+        setLiveDriverPositions(driverData.map((x) => x.driverNumber));
+        let liveLaps = await getAllLaps(driverData.map((x) => x.driverNumber));
+        setLiveLapsAnalysis(liveLaps);
+    };
 
     const startSession = async () => {
         let liveSession: LiveSession = await getLiveSession();
         setSession(liveSession);
-        console.log(liveSession);
         let drivers: LiveDriver[] = await getLiveDrivers();
+        setDriverDataConst(drivers);
         driverData = drivers;
-        console.log(drivers);
         let trackMap: Pos[] = await getTrackMap();
-        console.log(trackMap);
         setMapPoints(trackMap);
         delayRef.current = ((new Date()).getTime() - date.getTime()) / 1000 + timeBefore;
-        console.log(`delayRef.current = ${delayRef.current}`);
         loadData();
+        loadLiveAnalysis();
     };
 
     const loadData = async () => {
@@ -134,6 +146,7 @@ export default function LiveDash() {
             driverPosition.time = new Date(driverPosition.time.getTime() + delayRef.current * 1000 - timeBefore * 1000 + 350);
             driverPositions.push(driverPosition);
         }
+        setLiveDriverPositions(driverPositions[driverPositions.length - 1].driverNums);
         let currentPos: undefined | LiveDriverPosition;
         for (let i = 0; i < driverPositions.length; i++) {
             if (driverPositions[i].time <= new Date()) {
@@ -145,30 +158,25 @@ export default function LiveDash() {
         }
         if (currentPos != undefined) {
             setCurrentPosition(currentPos);
-            console.log(currentPos);
-            console.log("POS SET ABOVE");
         }
         else if (driverPositions.length > 0) {
             setCurrentPosition(driverPositions[driverPositions.length - 1]);
-            console.log(driverPositions[driverPositions.length - 1]);
-            console.log("POS SET ABOVE");
         }
 
 
-        let liveMarshalSectors: LiveMarshalSectors[] = liveData.marshalSectors;
+        // let liveMarshalSectors: LiveMarshalSectors[] = liveData.marshalSectors;
 
-        for (let i = 0; i < liveMarshalSectors.length; i++)
-        {
-            liveMarshalSectors[i].time =  new Date(liveMarshalSectors[i].time.getTime() + delayRef.current * 1000 - timeBefore * 1000 + 350);
-        }
+        // for (let i = 0; i < liveMarshalSectors.length; i++)
+        // {
+        //     liveMarshalSectors[i].time =  new Date(liveMarshalSectors[i].time.getTime() + delayRef.current * 1000 - timeBefore * 1000 + 350);
+        // }
 
-        let allSectors = [...marshalSectors, ...liveMarshalSectors];
+        // let allSectors = [...marshalSectors, ...liveMarshalSectors];
 
-        setMarshalSectors(allSectors);
+        // setMarshalSectors(allSectors);
 
-        console.log(allSectors);
+        // console.log(allSectors);
 
-        console.log(liveData);
 
 
         setDriverPositions([...driverPositions]);
@@ -178,21 +186,19 @@ export default function LiveDash() {
 
         setLapNumber(liveData.lapNumber);
 
+        // const timeout2 = setTimeout(() => {
+        //     setTrackState(liveData.trackState);
+        //     // your action here
+        // }, 2500);
+        setTrackState(liveData.trackState);
         setPositionsKey(prevKey => prevKey + 1); // Increment positionsKey to trigger re-render
-        console.log(`Time taken: ${((new Date()).getTime() - startLoad.getTime()) / 1000}`);
         date = new Date(date.getTime() + 2500);
         let loadDate = new Date(date.getTime() - timeBefore * 1000 + delayRef.current * 1000);
         let msDelay = (loadDate.getTime() - (new Date().getTime()));
-        console.log(msDelay); // WAIT TIME
-        console.log("SET STATE");
         const timeout = setTimeout(() => {
             loadData();
         }, msDelay);
     };
-
-    useEffect(() => {
-        console.log("Updated driver positions:", driverPositionsConst);
-    }, [driverPositionsConst]);
 
     useEffect(() => {
         if (hasRun.current) return;
@@ -204,7 +210,8 @@ export default function LiveDash() {
     const containerRef = useRef<HTMLDivElement>(null);
     const [containerWidth, setContainerWidth] = useState(3200);
     const [containerHeight, setContainerHeight] = useState(1400);
-    const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+    const [windowWidth, setWindowWidth] = useState<number>(typeof window !== 'undefined' ? window.innerWidth : 1200);
+
 
     useEffect(() => {
         const updateSizes = () => {
@@ -261,9 +268,41 @@ export default function LiveDash() {
                         </Typography>
                     </Box>
 
-                    <Typography variant="h6" color="inherit" noWrap>
-                        Lap {lapNumber}/{sessionData.laps}
-                    </Typography>
+                    <Box display="flex" alignItems="center" gap={3}>
+                        <Typography variant="h6" color="inherit" noWrap>
+                            Lap {lapNumber}/{sessionData.laps}
+                        </Typography>
+
+                        <Box
+                            sx={{
+                                backgroundColor: ["#00ad62", "#c40000", "#c8d422", "#c8d422", "#c8d422", "#c8d422", "#c8d422"][trackState],
+                                fontWeight: "bold",
+                                width: "115px",
+                                borderRadius: 2,
+                                display: "flex",
+                                justifyContent: "center",
+                                alignItems: "center",
+                                height: "100%",
+                                py: 0.5,
+
+                                // Conditional outline styles
+                                outline:
+                                    trackState === 2 ? "2px solid white" :
+                                        trackState === 4 ? "2px dashed white" :
+                                            trackState === 3 ? "2px solid white" :
+                                                trackState === 5 ? "2px dashed white" :
+                                                    "none",
+
+                                animation:
+                                    trackState === 3 ? "flash-outline 2s infinite" :
+                                        trackState === 5 ? "flash-outline 2s infinite" :
+                                            "none",
+                            }}
+                        >
+                            <Typography fontWeight={"bold"}>{["Track Clear", "Red Flag", "SC", "SC Ending", "VSC", "VSC Ending", "Yellow Flag"][trackState]}</Typography>
+                        </Box>
+                    </Box>
+
                 </Toolbar>
             </AppBar>
 
@@ -284,13 +323,13 @@ export default function LiveDash() {
                     >
                         <TrackMapDisplay
                             points={mapPoints}
-                            width={isWide ? containerWidth - 850 : containerWidth}
+                            width={isWide ? containerWidth - 750 : containerWidth}
                             height={isWide ? containerHeight : mapHeight}
                             rotationDeg={sessionData.rotation - 4}
                             driversData={telemetryData}
                             positions={currentDriverPositions?.driverNums ?? []}
-                            marshalSectors={sessionData.marshalSectors}
-                            sectorStates={marshalSectors.length > 0 ? marshalSectors[marshalSectors.length - 1].sectorStates : [2, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}
+                        // marshalSectors={sessionData.marshalSectors}
+                        // sectorStates={marshalSectors.length > 0 ? marshalSectors[marshalSectors.length - 1].sectorStates : [2, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}
                         />
                     </Box>
 
@@ -301,6 +340,15 @@ export default function LiveDash() {
                             showTelem={false}
                         />
                     </Box>
+                </Box>
+                <Box padding={"20px"}>
+                    <LiveAnalysis lapsData={liveLapsAnalysis} positions={liveDriverPositions} drivers={driverDataConst.reduce(
+                        (acc, driver) => {
+                            acc[driver.driverNumber] = driver;
+                            return acc;
+                        },
+                        {} as Record<number, LiveDriver>
+                    )} />
                 </Box>
             </Box>
         </ThemeProvider>

@@ -39,6 +39,10 @@ function formatRaceTime(result: RaceResult, maxLaps: number): string {
 }
 
 function formatToMinSecMillis(seconds: number): string {
+    if (seconds == -1)
+    {
+        return "nan";
+    }
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     const millis = Math.round((seconds % 1) * 1000);
@@ -60,7 +64,7 @@ interface RaceResultsTableProps {
 export const RaceResultsTable: React.FC<RaceResultsTableProps> = ({ results, year, round, session }) => {
     let maxLaps = Math.max(...results.map((x) => x.lapsCompleted));
 
-    let fastestLap = Math.min(...results.map((x) => x.fastestLap));
+    let fastestLap = Math.min(...results.map((x) => x.fastestLap == -1 ? 999 : x.fastestLap));
 
     return (
         <Box padding={"20px"} sx={{ width: '1300px', maxWidth: '100%' }} >
@@ -71,14 +75,14 @@ export const RaceResultsTable: React.FC<RaceResultsTableProps> = ({ results, yea
                 <Table>
                     <TableHead>
                         <TableRow>
-                            <TableCell><Typography>Pos</Typography></TableCell>
-                            <TableCell><Typography>Driver</Typography></TableCell>
-                            <TableCell><Typography>Team</Typography></TableCell>
-                            <TableCell><Typography>Time/Gap</Typography></TableCell>
-                            <TableCell><Typography>Fastest Lap</Typography></TableCell>
-                            <TableCell><Typography>Positions Gained</Typography></TableCell>
-                            <TableCell><Typography>Points</Typography></TableCell>
-                            <TableCell><Typography>Laps</Typography></TableCell>
+                            <TableCell><Typography fontWeight={"bold"}>Pos</Typography></TableCell>
+                            <TableCell><Typography fontWeight={"bold"}>Driver</Typography></TableCell>
+                            <TableCell><Typography fontWeight={"bold"}>Team</Typography></TableCell>
+                            <TableCell><Typography fontWeight={"bold"}>Time/Gap</Typography></TableCell>
+                            <TableCell><Typography fontWeight={"bold"}>Fastest Lap</Typography></TableCell>
+                            <TableCell><Typography fontWeight={"bold"}>Positions Gained</Typography></TableCell>
+                            <TableCell><Typography fontWeight={"bold"}>Points</Typography></TableCell>
+                            <TableCell><Typography fontWeight={"bold"}>Laps</Typography></TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>

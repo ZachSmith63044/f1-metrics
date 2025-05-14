@@ -34,3 +34,12 @@ body {
     opacity: 0.3;
   }
 }
+
+@keyframes flash-outline {
+  0%, 100% {
+    outline-color: white;
+  }
+  50% {
+    outline-color: transparent;
+  }
+}

@@ -6,10 +6,20 @@ export interface Standing {
     points: number;
     wins: number;
     interval: number;
+    colour: string;
+}
+
+export interface DriverStanding {
+    name: string;
+    points: number;
+    wins: number;
+    interval: number;
+    team: string;
+    teamColour: string;
 }
 
 export interface Standings {
-    drivers: Standing[];
+    drivers: DriverStanding[];
     teams: Standing[];
 }
 
@@ -20,7 +30,7 @@ export async function fetchStandings(year: string): Promise<Standings> {
         const text: string = await blob.text();
         const jsonData: any = JSON.parse(text);
 
-        let drivers: Standing[] = [];
+        let drivers: DriverStanding[] = [];
         let teams: Standing[] = [];
         for (let i = 0; i < jsonData["drivers"].length; i++) {
             let interval = 0;
@@ -28,7 +38,7 @@ export async function fetchStandings(year: string): Promise<Standings> {
             {
                 interval = jsonData["drivers"][i - 1][0] - jsonData["drivers"][i][0];
             }
-            drivers.push({ name: jsonData["drivers"][i][2], points: jsonData["drivers"][i][0], wins: jsonData["drivers"][i][1], interval: interval });
+            drivers.push({ name: jsonData["drivers"][i][2], points: jsonData["drivers"][i][0], wins: jsonData["drivers"][i][1], interval: interval, team: jsonData["drivers"][i][3], teamColour: jsonData["drivers"][i][4] });
         }
         for (let i = 0; i < jsonData["constructors"].length; i++) {
             let interval = 0;
@@ -36,7 +46,7 @@ export async function fetchStandings(year: string): Promise<Standings> {
             {
                 interval = jsonData["constructors"][i - 1][0] - jsonData["constructors"][i][0];
             }
-            teams.push({ name: jsonData["constructors"][i][2], points: jsonData["constructors"][i][0], wins: jsonData["constructors"][i][1], interval: interval });
+            teams.push({ name: jsonData["constructors"][i][2], points: jsonData["constructors"][i][0], wins: jsonData["constructors"][i][1], interval: interval, colour: jsonData["constructors"][i][3] });
         }
 
         // drivers.sort((a, b) => {

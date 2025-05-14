@@ -129,7 +129,7 @@ export const AnimatedDriverDot = ({
                 timeout = setTimeout(updatePosition, delayMs);
             }
             else {
-                console.log("NO NEXT!!!");
+                
             }
         };
 

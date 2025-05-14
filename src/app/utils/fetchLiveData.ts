@@ -120,10 +120,10 @@ export interface LiveDriverTyre {
 	time: Date;
 }
 
-export interface LiveMarshalSectors {
-	sectorStates: number[];
-	time: Date;
-}
+// export interface LiveMarshalSectors {
+// 	sectorStates: number[];
+// 	time: Date;
+// }
 
 export interface LiveData {
 	telemetry: LiveTelemetry[];
@@ -133,7 +133,8 @@ export interface LiveData {
 	driverSectors: LiveDriverSector[];
 	driverTyres: LiveDriverTyre[];
 	lapNumber: number;
-	marshalSectors: LiveMarshalSectors[];
+	trackState: number;
+	// marshalSectors: LiveMarshalSectors[];
 }
 
 function formatDateCustom(date: Date): string {
@@ -204,13 +205,11 @@ export async function getLiveData(time: Date, marshalSectorsNum: number): Promis
 
 	let driverPositions: LiveDriverPosition[] = [];
 
-	for (let i = 0; i < length; i++)
-	{
+	for (let i = 0; i < length; i++) {
 		const timeAdd = binToInt(boolList.splice(0, 12));
 		let driverCount = binToInt(boolList.splice(0, 5));
 		let nums: number[] = [];
-		for (let j = 0; j < driverCount; j++)
-		{
+		for (let j = 0; j < driverCount; j++) {
 			const driverNum = binToInt(boolList.splice(0, 7));
 			nums.push(driverNum);
 		}
@@ -220,11 +219,10 @@ export async function getLiveData(time: Date, marshalSectorsNum: number): Promis
 	let driverIntervals: LiveDriverInterval[] = [];
 	length = binToInt(boolList.splice(0, 8));
 
-	for (let i = 0; i < length; i++)
-	{
+	for (let i = 0; i < length; i++) {
 		let driverNum = binToInt(boolList.splice(0, 7));
-		let gapToLeader = binToInt(boolList.splice(0, 20))/1000;
-		let interval = binToInt(boolList.splice(0, 20))/1000;
+		let gapToLeader = binToInt(boolList.splice(0, 20)) / 1000;
+		let interval = binToInt(boolList.splice(0, 20)) / 1000;
 		const timeAdd = binToInt(boolList.splice(0, 12));
 		let timestamp = new Date(time.getTime() + timeAdd);
 		driverIntervals.push({ driverNum: driverNum, gapToLeader: gapToLeader, interval: interval, time: timestamp });
@@ -233,11 +231,10 @@ export async function getLiveData(time: Date, marshalSectorsNum: number): Promis
 	let driverSectors: LiveDriverSector[] = [];
 	length = binToInt(boolList.splice(0, 8));
 
-	for (let i = 0; i < length; i++)
-	{
+	for (let i = 0; i < length; i++) {
 		let driverNum = binToInt(boolList.splice(0, 7));
-		let duration = binToInt(boolList.splice(0, 24))/1000;
-		let pbDuration = binToInt(boolList.splice(0, 24))/1000;
+		let duration = binToInt(boolList.splice(0, 24)) / 1000;
+		let pbDuration = binToInt(boolList.splice(0, 24)) / 1000;
 		let sectorNum = binToInt(boolList.splice(0, 2));
 		const timeAdd = binToInt(boolList.splice(0, 12));
 		let timestamp = new Date(time.getTime() + timeAdd);
@@ -248,8 +245,7 @@ export async function getLiveData(time: Date, marshalSectorsNum: number): Promis
 	length = binToInt(boolList.splice(0, 5));
 	let compounds = ["SOFT", "MEDIUM", "HARD", "INTERMEDIATE", "WET", "UNKNOWN"]
 
-	for (let i = 0; i < length; i++)
-	{
+	for (let i = 0; i < length; i++) {
 		let driverNum = binToInt(boolList.splice(0, 7));
 		let compound = compounds[binToInt(boolList.splice(0, 3))];
 		let tyreAge = binToInt(boolList.splice(0, 7));
@@ -259,19 +255,21 @@ export async function getLiveData(time: Date, marshalSectorsNum: number): Promis
 
 	let lapNumber = binToInt(boolList.splice(0, 8));
 
-	let marshalSectorsFull: LiveMarshalSectors[] = [];
+	let trackState = binToInt(boolList.splice(0, 3));
 
-	length = binToInt(boolList.splice(0, 3));
-	for (let i = 0; i < length; i++)
-	{
-		let timeSeconds = binToInt(boolList.splice(0, 2));
-		let marshalSectors = [];
-		for (let j = 0; j < marshalSectorsNum; j++)
-		{
-			marshalSectors.push(binToInt(boolList.splice(0, 3)));
-		}
-		marshalSectorsFull.push({ sectorStates: marshalSectors, time: new Date(time.getTime() + timeSeconds * 1000) });
-	}
+	// let marshalSectorsFull: LiveMarshalSectors[] = [];
+
+	// length = binToInt(boolList.splice(0, 3));
+	// for (let i = 0; i < length; i++)
+	// {
+	// 	let timeSeconds = binToInt(boolList.splice(0, 2));
+	// 	let marshalSectors = [];
+	// 	for (let j = 0; j < marshalSectorsNum; j++)
+	// 	{
+	// 		marshalSectors.push(binToInt(boolList.splice(0, 3)));
+	// 	}
+	// 	marshalSectorsFull.push({ sectorStates: marshalSectors, time: new Date(time.getTime() + timeSeconds * 1000) });
+	// }
 
 
 	// bits.extend(integer(telem.driverNumber, 7))
@@ -282,10 +280,7 @@ export async function getLiveData(time: Date, marshalSectorsNum: number): Promis
 	//     bits.extend(integer(telem.gear - 1, 3))
 	//     bits.extend(integer(datetime_to_milliseconds_of_day(telem.time) % (delta * 1000), 12))
 
-	console.log(driverTyres);
-	console.log("LOADED UP");
-
-	return { telemetry: telem, positions: positions, driverPositions: driverPositions, driverIntervals: driverIntervals, driverSectors: driverSectors, driverTyres: driverTyres, lapNumber: lapNumber, marshalSectors: marshalSectorsFull };
+	return { telemetry: telem, positions: positions, driverPositions: driverPositions, driverIntervals: driverIntervals, driverSectors: driverSectors, driverTyres: driverTyres, lapNumber: lapNumber, trackState: trackState };
 }
 
 export interface Pos {
@@ -309,7 +304,6 @@ export async function getTrackMap(): Promise<Pos[]> {
 
 	let trackMap: Pos[] = [];
 
-	console.log(boolList);
 
 	while (boolList.length > 0) {
 		const x = binToInt(boolList.splice(0, 16), true) * -1;
@@ -319,4 +313,62 @@ export async function getTrackMap(): Promise<Pos[]> {
 
 
 	return trackMap;
+}
+
+
+export interface LiveLapData {
+	lapTime: number;
+	lapNumber: number;
+	s1: number;
+	s2: number;
+	s3: number;
+	compound: string;
+	tyreAge: number;
+	stint: number;
+	time: number;
+	isChecked: boolean;
+	isLoaded: boolean;
+}
+
+async function getLaps(driverNumber: number): Promise<LiveLapData[]> {
+	let laps: LiveLapData[] = [];
+
+	try {
+		const sessionRef: StorageReference = ref(storage, `LiveSession/${driverNumber}/laps.json`);
+		const blob: Blob = await getBlob(sessionRef);
+		const text: string = await blob.text();
+		const jsonData: any = JSON.parse(text);
+
+		for (let i = 0; i < jsonData.length; i++) {
+			laps.push({ lapNumber: jsonData[i][0], lapTime: jsonData[i][1], s1: jsonData[i][2], s2: jsonData[i][3], s3: jsonData[i][4], compound: jsonData[i][5], tyreAge: jsonData[i][6], stint: jsonData[i][7], time: jsonData[i][8], isChecked: false, isLoaded: false });
+		}
+
+		const sortedList = Array.from(new Set<number>(laps.map((x) => x.stint))).sort((a, b) => a - b);
+
+		for (let i = 0; i < laps.length; i++)
+		{
+			laps[i].stint = sortedList.indexOf(laps[i].stint) + 1;
+		}
+	}
+	catch (e) {
+		
+	}
+
+	return laps;
+}
+
+export async function getAllLaps(driverNumbers: number[]): Promise<Record<number, LiveLapData[]>> {
+	const lapDataArray = await Promise.all(
+		driverNumbers.map(async (driverNumber) => {
+			const laps = await getLaps(driverNumber);
+			return { driverNumber, laps };
+		})
+	);
+
+	const result: Record<number, LiveLapData[]> = {};
+	for (const entry of lapDataArray) {
+		result[entry.driverNumber] = entry.laps;
+	}
+
+	return result;
 }

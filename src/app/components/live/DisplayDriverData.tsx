@@ -34,14 +34,9 @@ export const DisplayDriverData: React.FC<DisplayDriverDataProps> = ({
                 }
             }
 
-            console.log(positions.length);
-            console.log("LENGTH");
-
             setCurrentPositions(currentPos);
 
             if (timeUntil != -1) {
-                console.log(timeUntil);
-                console.log("TIME UNTIL");
                 timeout = setTimeout(updatePositions, timeUntil);
             }
         };

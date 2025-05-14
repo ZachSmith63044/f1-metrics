@@ -5,6 +5,8 @@ import { storage } from "../firebaseConfig";
 import CloseIcon from '@mui/icons-material/Close';
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 
 type EventCardProps = {
     event: F1Event;
@@ -15,9 +17,6 @@ type EventCardProps = {
 function EventCard({ event, eventNum }: EventCardProps) {
     const router = useRouter();
 
-    const [flagUrl, setFlagUrl] = useState<string | null>(null);
-    const [loading, setLoading] = useState(true);
-
     const [nextSession, setNextSession] = useState<string>("");
     const [days, setDays] = useState<number>(0);
     const [hours, setHours] = useState<number>(0);
@@ -26,50 +25,13 @@ function EventCard({ event, eventNum }: EventCardProps) {
 
     const [open, setOpen] = useState<boolean>(false);
 
-    const flagUrls: Record<string, string> = {
-        "Australia": "https://firebasestorage.googleapis.com/v0/b/f1analysis-d2911.firebasestorage.app/o/Flags%2FAustralia.svg?alt=media&token=c0d70cb1-6573-4ea7-9de5-6716cee8c4ea",
-        "Austria": "https://firebasestorage.googleapis.com/v0/b/f1analysis-d2911.firebasestorage.app/o/Flags%2FAustria.svg?alt=media&token=f73b8a12-f0b3-494c-a48b-516009137401",
-        "Azerbaijan": "https://firebasestorage.googleapis.com/v0/b/f1analysis-d2911.firebasestorage.app/o/Flags%2FAzerbaijan.svg?alt=media&token=99c1b05e-e729-408a-9230-082c2acf7e98",
-        "Bahrain": "https://firebasestorage.googleapis.com/v0/b/f1analysis-d2911.firebasestorage.app/o/Flags%2FBahrain.svg?alt=media&token=a7e99902-a391-4306-9d2d-f2ad97b3d76f",
-        "Belgium": "https://firebasestorage.googleapis.com/v0/b/f1analysis-d2911.firebasestorage.app/o/Flags%2FBelgium.svg?alt=media&token=15b0668b-0b92-42db-8a93-91e9479e2469",
-        "Brazil": "https://firebasestorage.googleapis.com/v0/b/f1analysis-d2911.firebasestorage.app/o/Flags%2FBrazil.svg?alt=media&token=0541898d-a18c-4661-9c46-2343c4bebcd9",
-        "Canada": "https://firebasestorage.googleapis.com/v0/b/f1analysis-d2911.firebasestorage.app/o/Flags%2FCanada.svg?alt=media&token=225e7507-7319-4e14-bdbf-233a33225b1a",
-        "China": "https://firebasestorage.googleapis.com/v0/b/f1analysis-d2911.firebasestorage.app/o/Flags%2FChina.svg?alt=media&token=c4715a1c-df23-4aa8-a3a6-1e238dba47cf",
-        "France": "https://firebasestorage.googleapis.com/v0/b/f1analysis-d2911.firebasestorage.app/o/Flags%2FFrance.svg?alt=media&token=04c38d8a-62f0-4d90-9a42-e73b26a6703c",
-        "Germany": "https://firebasestorage.googleapis.com/v0/b/f1analysis-d2911.firebasestorage.app/o/Flags%2FGermany.svg?alt=media&token=c5d55d3c-44fe-4795-8788-1d4dc4fabbad",
-        "Hungary": "https://firebasestorage.googleapis.com/v0/b/f1analysis-d2911.firebasestorage.app/o/Flags%2FHungary.svg?alt=media&token=ea4c65d5-73c0-4306-98ae-f7c79702dc36",
-        "Italy": "https://firebasestorage.googleapis.com/v0/b/f1analysis-d2911.firebasestorage.app/o/Flags%2FItaly.svg?alt=media&token=3e666e81-19e4-4852-9102-b53d0dfc67aa",
-        "Japan": "https://firebasestorage.googleapis.com/v0/b/f1analysis-d2911.firebasestorage.app/o/Flags%2FJapan.svg?alt=media&token=42738d6b-8388-45f6-baaa-44182e74835e",
-        "Mexico": "https://firebasestorage.googleapis.com/v0/b/f1analysis-d2911.firebasestorage.app/o/Flags%2FMexico.svg?alt=media&token=93e25cf1-206c-419f-b3d4-cb2de11f0908",
-        "Monaco": "https://firebasestorage.googleapis.com/v0/b/f1analysis-d2911.firebasestorage.app/o/Flags%2FMonaco.svg?alt=media&token=65c36770-9c0e-4ec9-80c9-a66526840c1c",
-        "Netherlands": "https://firebasestorage.googleapis.com/v0/b/f1analysis-d2911.firebasestorage.app/o/Flags%2FNetherlands.svg?alt=media&token=af234554-1f66-4ae3-ab00-0fd6ed9b9a35",
-        "Portugal": "https://firebasestorage.googleapis.com/v0/b/f1analysis-d2911.firebasestorage.app/o/Flags%2FPortugal.svg?alt=media&token=c0776cdd-3948-4267-b96e-36612953416c",
-        "Qatar": "https://firebasestorage.googleapis.com/v0/b/f1analysis-d2911.firebasestorage.app/o/Flags%2FQatar.svg?alt=media&token=fa403dcd-dea5-47c1-b458-96e1d3c084ac",
-        "Russia": "https://firebasestorage.googleapis.com/v0/b/f1analysis-d2911.firebasestorage.app/o/Flags%2FRussia.svg?alt=media&token=4b6693ce-ae5d-4f70-9382-cddf3065e687",
-        "Saudi Arabia": "https://firebasestorage.googleapis.com/v0/b/f1analysis-d2911.firebasestorage.app/o/Flags%2FSaudi%20Arabia.svg?alt=media&token=a79a8f98-d4c5-4bd4-b307-f86d63db7ab2",
-        "Singapore": "https://firebasestorage.googleapis.com/v0/b/f1analysis-d2911.firebasestorage.app/o/Flags%2FSingapore.svg?alt=media&token=1901618a-d226-411d-bed9-525bf3bd80c9",
-        "Spain": "https://firebasestorage.googleapis.com/v0/b/f1analysis-d2911.firebasestorage.app/o/Flags%2FSpain.svg?alt=media&token=d4d21760-e6e8-43b7-bbf1-d96cb8337a35",
-        "United Arab Emirates": "https://firebasestorage.googleapis.com/v0/b/f1analysis-d2911.firebasestorage.app/o/Flags%2FUnited%20Arab%20Emirates.svg?alt=media&token=056f17b2-bb71-46b5-9e01-821dec8fc5e3",
-        "United Kingdom": "https://firebasestorage.googleapis.com/v0/b/f1analysis-d2911.firebasestorage.app/o/Flags%2FUnited%20Kingdom.svg?alt=media&token=7b6b435d-18da-49a2-8878-4e9bcdfe3118",
-        "United States": "https://firebasestorage.googleapis.com/v0/b/f1analysis-d2911.firebasestorage.app/o/Flags%2FUnited%20States.svg?alt=media&token=9231ccb3-6f00-4446-8b63-b5e221ed1ae1",
-    };
-
-    useEffect(() => {
-        const fetchFlag = async () => {
-            setFlagUrl(flagUrls[event.country]);
-            setLoading(false);
-        };
-
-        fetchFlag();
-    }, [event.country]);
-
 
 
     useEffect(() => {
         const calculateCountdown = () => {
             const now = new Date();
             const upcomingSession = event.sessions.find(
-                ([name, date]) => new Date(date).getTime() > now.getTime()
+                ([name, date]) => {console.log(`datefix: ${date}`); return new Date(date).getTime() > now.getTime();}
             );
 
             if (upcomingSession) {
@@ -325,25 +287,37 @@ function EventCard({ event, eventNum }: EventCardProps) {
                             <Box flexDirection={"row"} display={"flex"} justifyContent="space-between" width={"100%"}>
                                 <Box flexDirection={"row"} display={"flex"} justifyContent="start" width={"100%"} gap={3}>
                                     <Box flexDirection={"column"} display={"flex"}>
-                                        <Box flexDirection={"row"} display={"flex"} gap={1} alignItems={"center"}>
-                                            <Typography fontWeight={"bold"} fontSize={20}>
-                                                Fastest Lap -
+                                        <Box flexDirection={"row"} display={"flex"} gap={0.7} alignItems={"center"} alignContent={"center"}>
+                                            <Typography fontWeight={"bold"} fontSize={20} color={"#db34eb"}>
+                                                Fastest Lap
+                                            </Typography>
+                                            <AccessTimeIcon fontSize="small" sx={{ color: '#db34eb', marginTop: 0.2 }} />
+                                            <Typography fontWeight={"bold"} fontSize={20} color={"#db34eb"} marginRight={0.4}>
+                                                -
                                             </Typography>
                                             <Typography fontWeight={"regular"} fontSize={18}>
                                                 {event.fl}
                                             </Typography>
                                         </Box>
-                                        <Box flexDirection={"row"} display={"flex"} gap={1} alignItems={"center"}>
-                                            <Typography fontWeight={"bold"} fontSize={20}>
-                                                Championship Leader -
+                                        <Box flexDirection={"row"} display={"flex"} gap={0.7} alignItems={"center"}>
+                                            <Typography fontWeight={"bold"} fontSize={20} color={"gold"}>
+                                                Championship Leader
+                                            </Typography>
+                                            <EmojiEventsIcon fontSize="small" sx={{ color: 'gold', marginTop: 0.2 }} />
+                                            <Typography fontWeight={"bold"} fontSize={20} color={"gold"} marginRight={0.4}>
+                                                -
                                             </Typography>
                                             <Typography fontWeight={"regular"} fontSize={18}>
                                                 {event.championshipLeader![0]} ({event.championshipLeader![1]}pts)
                                             </Typography>
                                         </Box>
-                                        <Box flexDirection={"row"} display={"flex"} gap={1} alignItems={"center"}>
-                                            <Typography fontWeight={"bold"} fontSize={20}>
-                                                Most points -
+                                        <Box flexDirection={"row"} display={"flex"} gap={0.7} alignItems={"center"}>
+                                            <Typography fontWeight={"bold"} fontSize={20} color={"silver"}>
+                                                Most Points
+                                            </Typography>
+                                            <EmojiEventsIcon fontSize="small" sx={{ color: 'silver', marginTop: 0.2 }} />
+                                            <Typography fontWeight={"bold"} fontSize={20} color={"silver"} marginRight={0.4}>
+                                                -
                                             </Typography>
                                             <Typography fontWeight={"regular"} fontSize={18}>
                                                 {event.topDriver![0]} ({event.topDriver![1]}pts)
@@ -362,24 +336,24 @@ function EventCard({ event, eventNum }: EventCardProps) {
                                     />
                                     <Box flexDirection={"column"} display={"flex"} width={"175px"}>
                                         <Box flexDirection={"row"} display={"flex"} gap={1} alignItems={"center"}>
-                                            <Typography fontWeight={"bold"} fontSize={20}>
-                                                P1 -
+                                            <Typography fontWeight={"bold"} fontSize={20} color={"gold"}>
+                                                1 -
                                             </Typography>
                                             <Typography fontWeight={"regular"} fontSize={18}>
                                                 {event.topTeams![0][0]} ({event.topTeams![0][1]})
                                             </Typography>
                                         </Box>
                                         <Box flexDirection={"row"} display={"flex"} gap={1} alignItems={"center"}>
-                                            <Typography fontWeight={"bold"} fontSize={20}>
-                                                P2 -
+                                            <Typography fontWeight={"bold"} fontSize={20} color={"silver"}>
+                                                2 -
                                             </Typography>
                                             <Typography fontWeight={"regular"} fontSize={18}>
                                                 {event.topTeams![1][0]} ({event.topTeams![1][1]})
                                             </Typography>
                                         </Box>
                                         <Box flexDirection={"row"} display={"flex"} gap={1} alignItems={"center"}>
-                                            <Typography fontWeight={"bold"} fontSize={20}>
-                                                P3 -
+                                            <Typography fontWeight={"bold"} fontSize={20} color={"#CE8946"}>
+                                                3 -
                                             </Typography>
                                             <Typography fontWeight={"regular"} fontSize={18}>
                                                 {event.topTeams![2][0]} ({event.topTeams![2][1]})
@@ -389,24 +363,24 @@ function EventCard({ event, eventNum }: EventCardProps) {
                                 </Box>
                                 <Box flexDirection={"column"} display={"flex"} width={"220px"}>
                                     <Box flexDirection={"row"} display={"flex"} gap={1} alignItems={"center"}>
-                                        <Typography fontWeight={"bold"} fontSize={20}>
-                                            P1 -
+                                        <Typography fontWeight={"bold"} fontSize={20} color={"gold"}>
+                                            🥇 -
                                         </Typography>
                                         <Typography fontWeight={"regular"} fontSize={18}>
                                             {event.top3[0]}
                                         </Typography>
                                     </Box>
                                     <Box flexDirection={"row"} display={"flex"} gap={1} alignItems={"center"}>
-                                        <Typography fontWeight={"bold"} fontSize={20}>
-                                            P2 -
+                                        <Typography fontWeight={"bold"} fontSize={20} color={"silver"}>
+                                            🥈 -
                                         </Typography>
                                         <Typography fontWeight={"regular"} fontSize={18}>
                                             {event.top3[1]}
                                         </Typography>
                                     </Box>
                                     <Box flexDirection={"row"} display={"flex"} gap={1} alignItems={"center"}>
-                                        <Typography fontWeight={"bold"} fontSize={20}>
-                                            P3 -
+                                        <Typography fontWeight={"bold"} fontSize={20} color={"#CE8946"}>
+                                            🥉 -
                                         </Typography>
                                         <Typography fontWeight={"regular"} fontSize={18}>
                                             {event.top3[2]}
@@ -456,7 +430,7 @@ function EventList({ events }: EventListProps) {
                     ))
                     :
                     events.map((event, index) => (
-                        <EventCard key={index} event={event} eventNum={index} />
+                        index != 0 && <EventCard key={index} event={event} eventNum={index} />
                     ))
             }
         </div>

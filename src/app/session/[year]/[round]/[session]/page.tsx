@@ -115,7 +115,7 @@ export default function SessionDash() {
         <ThemeProvider theme={darkTheme}>
             <CssBaseline />
             <Navbar />
-            <Box justifyContent={"center"} justifyItems={"center"} mt={"20px"} >
+            <Box display="flex" flexDirection="column" justifyContent="center" alignItems="center" mt="20px">
                 <ToggleButtonGroup
                     value={selection}
                     exclusive

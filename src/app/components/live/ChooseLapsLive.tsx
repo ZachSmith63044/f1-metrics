@@ -1,25 +1,26 @@
 import React, { useEffect, useRef, useState } from "react";
-import { LapData } from "../classes/lapData";
-import { DriverData } from "../classes/driverData";
+import { LapData } from "../../classes/lapData";
+import { DriverData } from "../../classes/driverData";
 import { Box, Button, Checkbox, Tab, Tabs } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
-import { LiveLapData } from "../utils/fetchLiveData";
+import { LiveDriver, LiveLapData } from "../../utils/fetchLiveData";
 
 type ChooseLapsProps = {
-    laps: LapData[][];
-    driversData: DriverData[];
-    onChoose: (lap?: LapData, driver?: DriverData) => void;
+    laps: Record<number, LiveLapData[]>;
+    drivers: Record<number, LiveDriver>;
+    positions: number[];
+    onChoose: (lap?: LiveLapData, driver?: LiveDriver) => void;
     isCheckbox: boolean;
 };
 
 
 
-const ChooseLaps: React.FC<ChooseLapsProps> = ({ laps, driversData, onChoose, isCheckbox }) => {
+const ChooseLaps: React.FC<ChooseLapsProps> = ({ laps, drivers, positions, onChoose, isCheckbox }) => {
     const [driversDisplay, setDriversDisplay] = useState<string[]>(["Loading..."]);
     const [currentDriverIndex, setDriverIndex] = useState<number>(0);
-    const [lapsData, setLapsData] = useState<LapData[][]>(laps);
+    const [lapsData, setLapsData] = useState<Record<number, LiveLapData[]>>(laps);
     const [gridKey, setGridKey] = useState(0);
 
     const [driverChosenVal, setDriverChosen] = useState<string>("Loading...");
@@ -46,8 +47,7 @@ const ChooseLaps: React.FC<ChooseLapsProps> = ({ laps, driversData, onChoose, is
 
     useEffect(() => {
         console.log("LAPS CHANGED");
-        if (isCheckbox)
-        {
+        if (isCheckbox) {
             onChoose();
         }
     }, [lapsData])
@@ -56,79 +56,26 @@ const ChooseLaps: React.FC<ChooseLapsProps> = ({ laps, driversData, onChoose, is
     useEffect(() => {
         const fetchLaps = async () => {
             try {
-                let driverData = driversData;
-                console.log(lapsData);
-                console.log(driverData);
-
-                let calculatePositions = true;
-
-                for (let i = 0; i < driverData.length; i++) {
-                    if (driverData[i].position != -1) {
-                        calculatePositions = false;
-                    }
-                }
-
-                console.log(calculatePositions);
-
-                let driverPositionsEach = [];
-
-                if (calculatePositions) {
-                    let minLapTime = [];
-                    for (let i = 0; i < lapsData.length; i++) {
-                        let currentMinLap = 999;
-                        for (let j = 0; j < lapsData[i].length; j++) {
-                            let lap = lapsData[i][j];
-                            if (!lap.deleted && lap.lapTime != -1) {
-                                if (lap.lapTime < currentMinLap) {
-                                    currentMinLap = lap.lapTime;
-                                }
-                            }
-                        }
-                        minLapTime.push([currentMinLap, i]);
-                    }
-
-                    minLapTime.sort((a, b) => a[0] - b[0]);
-
-                    console.log(minLapTime);
-
-                    for (let i = 0; i < minLapTime.length; i++) {
-                        driverData[minLapTime[i][1]].position = i + 1;
-                        driverPositionsEach.push(minLapTime[i][1]);
-                    }
-                }
-                else {
-                    for (let i = 0; i < driverData.length; i++) {
-                        driverPositionsEach.push(-1);
-                    }
-                    for (let i = 0; i < driverData.length; i++) {
-                        driverPositionsEach[driverData[i].position - 1] = i;
-                    }
-                }
-
-                console.log(driverData);
-                console.log(driverPositionsEach);
+                let driverData = drivers;
 
                 let driversDesc = [];
 
-                for (let i = 0; i < driverPositionsEach.length; i++) {
-                    driversDesc.push(`${i + 1}) ${driverData[i].firstName} ${driverData[i].lastName}`);
+                for (let i = 0; i < positions.length; i++) {
+                    driversDesc.push(`${i + 1}) ${driverData[positions[i]].driver}`);
                 }
-
-                if (driverPositionsEach.length > 0) {
-                    setDriverChosen(`1) ${driverData[driverPositionsEach[0]].firstName} ${driverData[driverPositionsEach[0]].lastName}`);
-                }
-
-                console.log(driversDesc);
 
                 setLapsData(lapsData);
                 setDriversDisplay(driversDesc);
+                if (driverChosenVal == "Loading...") {
+                    setDriverChosen(driversDesc[0]);
+                }
             } catch (error) {
                 console.error("Error fetching pit performance data:", error);
             }
         };
 
         fetchLaps();
-    }, []);
+    }, [positions]);
 
     const handleDriverChange = (event: React.SyntheticEvent, value: any) => {
         setDriverIndex(driversDisplay.indexOf(value));
@@ -143,32 +90,22 @@ const ChooseLaps: React.FC<ChooseLapsProps> = ({ laps, driversData, onChoose, is
         // Handle the header click for the 'Selected' column
         if (field === 'isChecked') {
             // Select all laps
-            const newLapsData = [...lapsData[currentDriverIndex]];
+            const newLapsData = [...lapsData[positions[currentDriverIndex]]];
             const isChecked = newLapsData.map((x) => x.isChecked);
             if (isChecked.includes(true)) {
-                if (isChecked.includes(false)) {
-                    // select all laps
-                    for (let i = 0; i < newLapsData.length; i++) {
-                        newLapsData[i].isChecked = true;
-                    }
-                }
-                else {
-                    // deselect all laps
-                    for (let i = 0; i < newLapsData.length; i++) {
-                        newLapsData[i].isChecked = false;
-                    }
+                // select all laps
+                for (let i = 0; i < newLapsData.length; i++) {
+                    newLapsData[i].isChecked = true;
                 }
             }
             else {
-                // select quicklaps
+                // deselect all laps
                 for (let i = 0; i < newLapsData.length; i++) {
-                    if (newLapsData[i].isAccurate) {
-                        newLapsData[i].isChecked = true;
-                    }
+                    newLapsData[i].isChecked = false;
                 }
             }
-            let finishedLap = [...lapsData];
-            finishedLap[currentDriverIndex] = newLapsData;
+            let finishedLap = { ...lapsData };
+            finishedLap[positions[currentDriverIndex]] = newLapsData;
             setLapsData(finishedLap);
         }
     };
@@ -205,21 +142,21 @@ const ChooseLaps: React.FC<ChooseLapsProps> = ({ laps, driversData, onChoose, is
             valueFormatter: (params: number) => params == 9999 ? "nan" : formatLapTime(params),
         },
         {
-            field: 'sector1Time',
+            field: 's1',
             headerName: 'Sector 1',
             width: 100,
             disableColumnMenu: true,
             valueFormatter: (params: number) => params == 9999 ? "nan" : params.toFixed(3).padStart(6, '0'),
         },
         {
-            field: 'sector2Time',
+            field: 's2',
             headerName: 'Sector 2',
             width: 102,
             disableColumnMenu: true,
             valueFormatter: (params: number) => params == 9999 ? "nan" : params.toFixed(3).padStart(6, '0'),
         },
         {
-            field: 'sector3Time',
+            field: 's3',
             headerName: 'Sector 3',
             width: 102,
             disableColumnMenu: true,
@@ -232,28 +169,10 @@ const ChooseLaps: React.FC<ChooseLapsProps> = ({ laps, driversData, onChoose, is
             disableColumnMenu: true,
         },
         {
-            field: 'tyreLife',
+            field: 'tyreAge',
             headerName: 'Tyre Age',
             width: 105,
             disableColumnMenu: true,
-        },
-        {
-            field: 'isAccurate',
-            headerName: 'Accurate',
-            width: 110,
-            disableColumnMenu: true,
-            renderCell: (params) => {
-                const isAccurate = params.row.isAccurate;
-                return (
-                    <div style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
-                        {isAccurate ? (
-                            <CheckIcon style={{ color: 'green' }} />
-                        ) : (
-                            <CloseIcon style={{ color: 'red' }} />
-                        )}
-                    </div>
-                );
-            },
         },
         isCheckbox ? {
             field: 'isChecked',
@@ -269,8 +188,8 @@ const ChooseLaps: React.FC<ChooseLapsProps> = ({ laps, driversData, onChoose, is
                         <Checkbox
                             checked={row.isChecked}
                             onChange={(event) => {
-                                const newLapsData = [...lapsData];
-                                newLapsData[currentDriverIndex][row.lapNumber - 1].isChecked = event.target.checked;
+                                const newLapsData = { ...lapsData };
+                                newLapsData[positions[currentDriverIndex]][row.lapNumber - 1].isChecked = event.target.checked;
 
                                 if (shiftPressed.current && lastChangeIndex != -1) {
                                     console.log("SHIFT PRESSED");
@@ -278,13 +197,13 @@ const ChooseLaps: React.FC<ChooseLapsProps> = ({ laps, driversData, onChoose, is
                                     if (lastChangeIndex > row.lapNumber - 1) {
                                         for (let i = row.lapNumber - 1; i < lastChangeIndex; i++) {
                                             console.log(i);
-                                            newLapsData[currentDriverIndex][i].isChecked = true;
+                                            newLapsData[positions[currentDriverIndex]][i].isChecked = true;
                                         }
                                     }
                                     else {
                                         for (let i = lastChangeIndex; i < row.lapNumber; i++) {
                                             console.log(i);
-                                            newLapsData[currentDriverIndex][i].isChecked = true;
+                                            newLapsData[positions[currentDriverIndex]][i].isChecked = true;
                                         }
                                     }
                                 }
@@ -299,41 +218,42 @@ const ChooseLaps: React.FC<ChooseLapsProps> = ({ laps, driversData, onChoose, is
                 );
             },
         }
-        :
-        {
-            field: 'isChecked',
-            headerName: 'Load',
-            width: 75,
-            disableColumnMenu: true,
-            sortable: false,
-            filterable: false,
-            renderCell: (params) => {
-                const row = params.row as LapData;
-                return (
-                    <div style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
-                        <Button
-                            style={
-                                {
-                                    color: row.isLoaded == true ? "#00FF00" : ""
+            :
+            {
+                field: 'isChecked',
+                headerName: 'Load',
+                width: 75,
+                disableColumnMenu: true,
+                sortable: false,
+                filterable: false,
+                renderCell: (params) => {
+                    const row = params.row as LapData;
+                    return (
+                        <div style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
+                            <Button
+                                style={
+                                    {
+                                        color: row.isLoaded == true ? "#00FF00" : ""
+                                    }
                                 }
-                            }
-                            onClick={() => {
-                                const newLapsData = [...lapsData];
-                                newLapsData[currentDriverIndex][row.lapNumber - 1].isLoaded = !newLapsData[currentDriverIndex][row.lapNumber - 1].isLoaded;
+                                onClick={() => {
+                                    const newLapsData = { ...lapsData };
+                                    let index = newLapsData[positions[currentDriverIndex]].map((x) => x.lapNumber).indexOf(row.lapNumber);
+                                    newLapsData[positions[currentDriverIndex]][index].isLoaded = !newLapsData[positions[currentDriverIndex]][index].isLoaded;
 
-                                onChoose(laps[currentDriverIndex][row.lapNumber - 1], driversData[currentDriverIndex]);
+                                    onChoose(laps[positions[currentDriverIndex]][index], drivers[positions[currentDriverIndex]]);
 
-                                console.log("SELECTED");
+                                    console.log("SELECTED");
 
-                                setLapsData(newLapsData);
-                        }}
-                        >
-                            {row.isLoaded == true ? "Deselect" : "Load Lap"}
-                        </Button>
-                    </div>
-                );
+                                    setLapsData(newLapsData);
+                                }}
+                            >
+                                {row.isLoaded == true ? "Deselect" : "Load Lap"}
+                            </Button>
+                        </div>
+                    );
+                },
             },
-        },
     ];
 
 
@@ -352,7 +272,7 @@ const ChooseLaps: React.FC<ChooseLapsProps> = ({ laps, driversData, onChoose, is
             </Tabs>
             <DataGrid
                 key={gridKey}
-                rows={lapsData[currentDriverIndex].map((row, index) => ({ ...row, id: index }))}
+                rows={lapsData[positions[currentDriverIndex]].map((row, index) => ({ ...row, id: index }))}
                 columns={columns}
                 disableRowSelectionOnClick
                 onColumnHeaderClick={(params) => handleHeaderClick(params.field)}
