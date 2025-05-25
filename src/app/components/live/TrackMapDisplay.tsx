@@ -172,8 +172,12 @@ export const TrackMapDisplay: React.FC<TrackMapDisplayProps> = ({
 						if (!data) return null;
 
 						const isSC = data.driver === undefined;
+						if (isSC)
+						{
+							
+						}
 						const isSelected = data.driver?.selected ?? false;
-
+						
 						return (
 							<AnimatedDriverDot
 								key={driverId}

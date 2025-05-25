@@ -84,7 +84,7 @@ const SpeedsChart: React.FC<SpeedsChartProps> = ({ laps, drivers }) => {
 
 
                 for (let i = fastestLapsData.length - 1; i > -1; i--) {
-                    if (fastestLapsData[i].maxSpeed < 300 || fastestLapsData[i].minSpeed < 40 || fastestLapsData[i].throttle < 0.25) {
+                    if (fastestLapsData[i].maxSpeed < 250 || fastestLapsData[i].minSpeed < 40 || fastestLapsData[i].throttle < 0.25) {
                         fastestLapsData.splice(i, 1);
                         driversData.splice(i, 1);
                     }

@@ -19,7 +19,7 @@ type ChooseLapsProps = {
 
 const ChooseLaps: React.FC<ChooseLapsProps> = ({ laps, drivers, positions, onChoose, isCheckbox }) => {
     const [driversDisplay, setDriversDisplay] = useState<string[]>(["Loading..."]);
-    const [currentDriverIndex, setDriverIndex] = useState<number>(0);
+    const [currentDriverIndex, setDriverIndex] = useState<number>(1);
     const [lapsData, setLapsData] = useState<Record<number, LiveLapData[]>>(laps);
     const [gridKey, setGridKey] = useState(0);
 
@@ -68,6 +68,16 @@ const ChooseLaps: React.FC<ChooseLapsProps> = ({ laps, drivers, positions, onCho
                 setDriversDisplay(driversDesc);
                 if (driverChosenVal == "Loading...") {
                     setDriverChosen(driversDesc[0]);
+                }
+                else {
+                    let driverText = driverChosenVal.split(") ")[1];
+                    for (let i = 0; i < driversDesc.length; i++) {
+                        if (driversDesc[i].includes(driverText)) {
+                            setDriverChosen(driversDesc[i]);
+                            setDriverIndex(i);
+                            // setDriverIndex()
+                        }
+                    }
                 }
             } catch (error) {
                 console.error("Error fetching pit performance data:", error);
@@ -189,19 +199,20 @@ const ChooseLaps: React.FC<ChooseLapsProps> = ({ laps, drivers, positions, onCho
                             checked={row.isChecked}
                             onChange={(event) => {
                                 const newLapsData = { ...lapsData };
-                                newLapsData[positions[currentDriverIndex]][row.lapNumber - 1].isChecked = event.target.checked;
+                                let index = newLapsData[positions[currentDriverIndex]].map((x) => x.lapNumber).indexOf(row.lapNumber);
+                                newLapsData[positions[currentDriverIndex]][index].isChecked = event.target.checked;
 
                                 if (shiftPressed.current && lastChangeIndex != -1) {
                                     console.log("SHIFT PRESSED");
 
-                                    if (lastChangeIndex > row.lapNumber - 1) {
-                                        for (let i = row.lapNumber - 1; i < lastChangeIndex; i++) {
+                                    if (lastChangeIndex > index) {
+                                        for (let i = index; i < lastChangeIndex; i++) {
                                             console.log(i);
                                             newLapsData[positions[currentDriverIndex]][i].isChecked = true;
                                         }
                                     }
                                     else {
-                                        for (let i = lastChangeIndex; i < row.lapNumber; i++) {
+                                        for (let i = lastChangeIndex; i < index; i++) {
                                             console.log(i);
                                             newLapsData[positions[currentDriverIndex]][i].isChecked = true;
                                         }
@@ -210,7 +221,7 @@ const ChooseLaps: React.FC<ChooseLapsProps> = ({ laps, drivers, positions, onCho
 
                                 setLapsData(newLapsData);
 
-                                setLastChangeIndex(row.lapNumber - 1);
+                                setLastChangeIndex(index);
                             }}
                         >
                         </Checkbox>

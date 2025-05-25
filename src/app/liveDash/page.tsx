@@ -22,7 +22,10 @@ export interface LiveDriverData {
 }
 
 export default function LiveDash() {
-    let date: Date = new Date("2025-05-04T20:08:50+00:00");
+
+    let delayToRealTime = 50;
+    // let date: Date = getCurrentTime(new Date());
+    let date: Date = new Date(2025, 4, 24, 16, 12);
     const delayRef = useRef(0);
     const timeBefore = 1.25; // time before start to start download
 
@@ -46,6 +49,19 @@ export default function LiveDash() {
     const [currentDriverPositions, setCurrentPosition] = useState<LiveDriverPosition | undefined>();
     const [liveDriverPositions, setLiveDriverPositions] = useState<number[]>([]);
     // const [driverIntervals, setDriverIntervals] = useState<LiveDriverInterval[]>([]);
+
+    function getCurrentTime(date: Date): Date {
+        let dateTime = date.getTime() - 8000 - delayToRealTime * 1000;
+        const next = dateTime - dateTime % 2500;
+
+        console.log(new Date(next));
+        console.log("DATE");
+        console.log("REUSE")
+
+        console.log((new Date(next)).getMilliseconds())
+
+        return new Date(next);
+    }
 
     const loadLiveAnalysis = async () => {
         setLiveDriverPositions(driverData.map((x) => x.driverNumber));
@@ -93,8 +109,13 @@ export default function LiveDash() {
         }
         for (let i = 0; i < positions.length; i++) {
             if (positions[i].driverNum in newTelemetryData) {
-                newTelemetryData[positions[i].driverNum].position.push(positions[i]);
+                if (driverData.map((x) => x.driverNumber).includes(positions[i].driverNum)) {
+                    newTelemetryData[positions[i].driverNum].position.push(positions[i]);
+                }
             } else {
+                if (driverData[driverData.map((x) => x.driverNumber).indexOf(positions[i].driverNum)] == undefined) {
+                    console.log(`safety CAR: ${positions[i].driverNum}`)
+                }
                 let driver: LiveDriver = driverData[driverData.map((x) => x.driverNumber).indexOf(positions[i].driverNum)];
                 newTelemetryData[positions[i].driverNum] = { driver: driver, telemetry: [], position: [positions[i]], intervals: [], sectors: [], tyres: [] };
             }
@@ -146,7 +167,12 @@ export default function LiveDash() {
             driverPosition.time = new Date(driverPosition.time.getTime() + delayRef.current * 1000 - timeBefore * 1000 + 350);
             driverPositions.push(driverPosition);
         }
-        setLiveDriverPositions(driverPositions[driverPositions.length - 1].driverNums);
+        if (driverPositions.length == 0) {
+            setLiveDriverPositions(driverData.map((driver) => driver.driverNumber));
+        }
+        else {
+            setLiveDriverPositions(driverPositions[driverPositions.length - 1].driverNums);
+        }
         let currentPos: undefined | LiveDriverPosition;
         for (let i = 0; i < driverPositions.length; i++) {
             if (driverPositions[i].time <= new Date()) {
@@ -218,10 +244,10 @@ export default function LiveDash() {
             setWindowWidth(window.innerWidth);
             if (containerRef.current) {
                 const fullWidth = containerRef.current.offsetWidth;
-                const maxHeight = window.innerHeight * 0.6;
+                const maxHeight = window.innerHeight * 0.9;
                 const maxMapWidth = (3 * maxHeight) / 2;
                 setContainerWidth(fullWidth); // -850
-                setContainerHeight(window.innerHeight * 0.75);
+                setContainerHeight(window.innerHeight * 0.9);
             }
         };
 
@@ -269,9 +295,12 @@ export default function LiveDash() {
                     </Box>
 
                     <Box display="flex" alignItems="center" gap={3}>
-                        <Typography variant="h6" color="inherit" noWrap>
-                            Lap {lapNumber}/{sessionData.laps}
-                        </Typography>
+                        {
+                            sessionData.session == "Race" &&
+                            <Typography variant="h6" color="inherit" noWrap>
+                                Lap {lapNumber}/{sessionData.laps}
+                            </Typography>
+                        }
 
                         <Box
                             sx={{
@@ -341,7 +370,7 @@ export default function LiveDash() {
                         />
                     </Box>
                 </Box>
-                <Box padding={"20px"}>
+                {/* <Box padding={"20px"}>
                     <LiveAnalysis lapsData={liveLapsAnalysis} positions={liveDriverPositions} drivers={driverDataConst.reduce(
                         (acc, driver) => {
                             acc[driver.driverNumber] = driver;
@@ -349,7 +378,7 @@ export default function LiveDash() {
                         },
                         {} as Record<number, LiveDriver>
                     )} />
-                </Box>
+                </Box> */}
             </Box>
         </ThemeProvider>
     );

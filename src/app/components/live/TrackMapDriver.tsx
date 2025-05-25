@@ -101,35 +101,31 @@ export const AnimatedDriverDot = ({
                 setX(next.x);
                 setY(next.y);
 
+                let realX = next.x * Math.cos(rotationDeg * Math.PI / 180) - next.y * Math.sin(rotationDeg * Math.PI / 180);
+                let realY = next.x * Math.sin(rotationDeg * Math.PI / 180) + next.y * Math.cos(rotationDeg * Math.PI / 180);
 
                 if (next.x < (rotatedMaxX + rotatedMinX) / 2) {
-                    if (next.y < (rotatedMaxY + rotatedMinY) / 2) {// 0=tl,1=tr,2=br,3=bl
-                        // tl
-                        setPos(2);
-                    }
-                    else {
-                        // bl
-                        setPos(1);
-                    }
-                }
-                else {
                     if (next.y < (rotatedMaxY + rotatedMinY) / 2) {
-                        // tr
-                        setPos(3);
+                        setPos(0); // top-left
+                    } else {
+                        setPos(3); // bottom-left
                     }
-                    else {
-                        // br
-                        setPos(0);
+                } else {
+                    if (next.y < (rotatedMaxY + rotatedMinY) / 2) {
+                        setPos(1); // top-right
+                    } else {
+                        setPos(2); // bottom-right
                     }
                 }
 
                 const delayMs = next.time.getTime() - now.getTime();
                 setDelay(delayMs / 1000);
-
-                timeout = setTimeout(updatePosition, delayMs);
+                if (delayMs > 0) {
+                    timeout = setTimeout(updatePosition, delayMs);
+                }
             }
             else {
-                
+
             }
         };
 

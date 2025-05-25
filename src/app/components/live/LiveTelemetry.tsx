@@ -308,7 +308,7 @@ export const LiveTelemetry: React.FC<LiveTelemetryProps> = ({
                             ))}
                         </LineChart>
                     </ResponsiveContainer>
-                    <ResponsiveContainer width="100%" height={120}>
+                    <ResponsiveContainer width="100%" height={160}>
                         <LineChart>
                             <CartesianGrid strokeDasharray="3 3" />
                             <XAxis type="number" dataKey="relativeDistance" domain={[0, 1]} tick={{ fill: 'white' }} tickCount={11} height={30} tickFormatter={(val, ind) => { return `${val * 100}%` }} />
@@ -386,7 +386,7 @@ export const LiveTelemetry: React.FC<LiveTelemetryProps> = ({
                             let telem = await getLiveTelem(driver!.driverNumber, lap!.lapNumber, lap!.lapTime);
                             console.log(telem);
                             let telemTotal = [...telemetryData];
-                            telemTotal.push({ telemetry: telem, driver: driver, isDashed: false, lap: lap });
+                            telemTotal.push({ telemetry: telem, driver: driver, isDashed: telemTotal.map((x) => x.driver.teamColour).includes(driver.teamColour), lap: lap });
                             calculateDeltas(telemTotal);
                         }
                     }

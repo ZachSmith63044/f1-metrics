@@ -6,6 +6,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { LiveStrategy } from "./LiveStrategy";
 import { LiveTelemetry } from "./LiveTelemetry";
 import { fetchLiveTelemetryData } from "@/app/utils/fetchTelemetryData";
+import { LapTimesLive } from "./LapTimes";
 
 interface LiveAnalysisProps {
     lapsData: Record<number, LiveLapData[]>;
@@ -69,8 +70,8 @@ export const LiveAnalysis: React.FC<LiveAnalysisProps> = ({
 
             <div className="mt-4">
                 {section === "Strategy View" && <LiveStrategy lapsData={lapsData} positions={positions} drivers={drivers} />}
-                {section === "Lap Times" && <LiveTelemetry lapsData={lapsData} positions={positions} drivers={drivers} />}
-                {section === "Telemetry Comparison" && <div>Telem</div>}
+                {section === "Lap Times" && <LapTimesLive lapsData={lapsData} positions={positions} drivers={drivers} />}
+                {section === "Telemetry Comparison" && <LiveTelemetry lapsData={lapsData} positions={positions} drivers={drivers} />}
             </div>
         </Box>
     );

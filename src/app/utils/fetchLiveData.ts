@@ -155,7 +155,7 @@ function formatDateCustom(date: Date): string {
 		microseconds = "";
 	}
 
-	return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}${microseconds}+00:00.l`;
+	return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}${microseconds}+00:00.ld`;
 }
 
 export async function getLiveData(time: Date, marshalSectorsNum: number): Promise<LiveData> {
@@ -177,7 +177,7 @@ export async function getLiveData(time: Date, marshalSectorsNum: number): Promis
 	let telem: LiveTelemetry[] = [];
 
 	for (let i = 0; i < length; i++) {
-		const driverNum = binToInt(boolList.splice(0, 7))
+		const driverNum = binToInt(boolList.splice(0, 7));
 		const speed = binToInt(boolList.splice(0, 9));
 		const throttle = binToInt(boolList.splice(0, 7));
 		const brake = boolList.splice(0, 1)[0];
@@ -198,7 +198,16 @@ export async function getLiveData(time: Date, marshalSectorsNum: number): Promis
 		const y = binToInt(boolList.splice(0, 16), true);
 		const timeAdd = binToInt(boolList.splice(0, 12));
 		const timeSplit = new Date(time.getTime() + timeAdd);
+		if (driverNum >= 100)
+		{
+			console.log(`driverNum: ${driverNum}`);
+		}
 		positions.push({ driverNum: driverNum, x: -x, y: y, time: timeSplit });
+	}
+
+	if (positions.length != length)
+	{
+		console.log("ERROR DEBUG")
 	}
 
 	length = binToInt(boolList.splice(0, 7));
@@ -230,6 +239,8 @@ export async function getLiveData(time: Date, marshalSectorsNum: number): Promis
 
 	let driverSectors: LiveDriverSector[] = [];
 	length = binToInt(boolList.splice(0, 8));
+	console.log(length);
+	console.log("LENGTHSS driverSectors");
 
 	for (let i = 0; i < length; i++) {
 		let driverNum = binToInt(boolList.splice(0, 7));
@@ -241,9 +252,14 @@ export async function getLiveData(time: Date, marshalSectorsNum: number): Promis
 		driverSectors.push({ driverNum: driverNum, duration: duration, pbDuration: pbDuration, sectorNum: sectorNum, time: timestamp });
 	}
 
+	console.log(driverSectors.length);
+
 	let driverTyres: LiveDriverTyre[] = [];
 	length = binToInt(boolList.splice(0, 5));
-	let compounds = ["SOFT", "MEDIUM", "HARD", "INTERMEDIATE", "WET", "UNKNOWN"]
+	let compounds = ["SOFT", "MEDIUM", "HARD", "INTERMEDIATE", "WET", "UNKNOWN"];
+
+	console.log(length);
+	console.log("LENGTHSS");
 
 	for (let i = 0; i < length; i++) {
 		let driverNum = binToInt(boolList.splice(0, 7));
@@ -252,10 +268,20 @@ export async function getLiveData(time: Date, marshalSectorsNum: number): Promis
 		driverTyres.push({ driverNum: driverNum, compound: compound, tyreAge: tyreAge, time: time });
 	}
 
-
 	let lapNumber = binToInt(boolList.splice(0, 8));
 
 	let trackState = binToInt(boolList.splice(0, 3));
+
+	if (lapNumber != 250)
+	{
+		console.log(`ERROR LAP NUM ${boolList.length}`);
+	}
+	else
+	{
+		console.log(`ERROR LAP NUM NONE ${boolList.length}`);
+	}
+	console.log(lapNumber);
+	console.log(boolList.length);
 
 	// let marshalSectorsFull: LiveMarshalSectors[] = [];
 

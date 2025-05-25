@@ -456,15 +456,20 @@ const DisplayTyres = ({
         return `${minutes}:${formattedSeconds}`;
     };
 
-    return (
-        <div style={{ marginLeft: 20, display: 'flex', gap: 10, alignItems: "center", fontWeight: "bold" }}>
-            <img
-                src={`/tyres/${tyre.compound.toLowerCase()}.svg`}
-                alt={tyre.compound}
-                width={40}
-                height={40}
-            />
-            {tyre.tyreAge}L
-        </div>
-    );
+    try {
+        return (
+            <div style={{ marginLeft: 20, display: 'flex', gap: 10, alignItems: "center", fontWeight: "bold" }}>
+                <img
+                    src={`/tyres/${tyre.compound.toLowerCase()}.svg`}
+                    alt={tyre.compound}
+                    width={40}
+                    height={40}
+                />
+                {tyre.tyreAge}L
+            </div>
+        );
+    }
+    catch (e) {
+        return null;
+    }
 };
