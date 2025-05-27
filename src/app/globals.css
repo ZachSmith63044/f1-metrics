@@ -37,7 +37,7 @@ body {
 
 @keyframes flash-outline {
   0%, 100% {
-    outline-color: white;
+    outline-color: #FF2222;
   }
   50% {
     outline-color: transparent;

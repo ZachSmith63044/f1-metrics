@@ -2,15 +2,16 @@
 
 
 import React, { useEffect, useRef, useState } from "react";
-import darkTheme from "../theme";
+import darkTheme from "../../../../theme";
 import { CssBaseline, ThemeProvider, Stack, Typography, Box, AppBar, Toolbar, IconButton } from "@mui/material";
-import Navbar from "../components/Navbar";
-import { getAllLaps, getLiveData, getLiveDrivers, getLiveSession, getTrackMap, LiveData, LiveDriver, LiveDriverInterval, LiveDriverPosition, LiveDriverSector, LiveDriverTyre, LiveLapData, LivePosition, LiveSession, LiveTelemetry, Pos } from "../utils/fetchLiveData";
-import { TrackMapDisplay } from "../components/live/TrackMapDisplay";
-import { DisplayDriverData } from "../components/live/DisplayDriverData";
+import Navbar from "../../../../components/Navbar";
+import { getAllLaps, getLiveData, getLiveDrivers, getLiveSession, getTrackMap, LiveData, LiveDriver, LiveDriverInterval, LiveDriverPosition, LiveDriverSector, LiveDriverTyre, LiveLapData, LivePosition, LiveSession, LiveTelemetry, Pos } from "../../../../utils/fetchLiveData";
+import { TrackMapDisplay } from "../../../../components/live/TrackMapDisplay";
+import { DisplayDriverData } from "../../../../components/live/DisplayDriverData";
 import HomeIcon from '@mui/icons-material/Home';
-import { fetchLiveTelemetryData } from "../utils/fetchTelemetryData";
-import { LiveAnalysis } from "../components/live/LiveAnalysis";
+import { fetchLiveTelemetryData } from "../../../../utils/fetchTelemetryData";
+import { LiveAnalysis } from "../../../../components/live/LiveAnalysis";
+import { useParams } from "next/navigation";
 
 export interface LiveDriverData {
     driver: LiveDriver;
@@ -26,14 +27,15 @@ export interface LiveDriverData {
 export default function LiveDash() {
 
     let delayToRealTime = 54;
-    let date: Date = getCurrentTime(new Date());
-    // let date: Date = new Date(2025, 4, 24, 15, 17, 50);
+    // let date: Date = new Date();
+    let date: Date = new Date(2025, 4, 25, 14, 17, 50);
     const delayRef = useRef(0);
     const timeBefore = 1.25; // time before start to start download
 
-    const year = "2025";
-    const eventName = "Monaco Grand Prix";
-    const sessionName = "Race";
+    const params = useParams();
+    const year = params.year as string;
+    const eventName = decodeURIComponent(params.round as string);
+    const sessionName = decodeURIComponent(params.session as string);
 
     const [mapPoints, setMapPoints] = useState<Pos[]>([]);
     const [sessionData, setSession] = useState<LiveSession>(new LiveSession("", "", 0, "", 0, [], new Date()));
@@ -77,6 +79,18 @@ export default function LiveDash() {
 
     const startSession = async () => {
         let liveSession: LiveSession = await getLiveSession(year, eventName, sessionName);
+        console.log(liveSession.startDate);
+        console.log("UP SD");
+        const sessionEndDate = new Date(new Date(liveSession.startDate).getTime() + 7200000);
+        if (new Date() < sessionEndDate) {
+            // date = getCurrentTime(new Date());
+        }
+        else {
+            console.log(date);
+            date = new Date(liveSession.startDate);
+            console.log(date);
+        }
+
         setSession(liveSession);
         let drivers: LiveDriver[] = await getLiveDrivers(year, eventName, sessionName);
         setDriverDataConst(drivers);
@@ -342,10 +356,10 @@ export default function LiveDash() {
 
                                         // Conditional outline styles
                                         outline:
-                                            trackState === 2 ? "2px solid white" :
-                                                trackState === 4 ? "2px dashed white" :
-                                                    trackState === 3 ? "2px solid white" :
-                                                        trackState === 5 ? "2px dashed white" :
+                                            trackState === 2 ? "3px solid #FF2222" :
+                                                trackState === 4 ? "3px dashed #FF2222" :
+                                                    trackState === 3 ? "3px solid #FF2222" :
+                                                        trackState === 5 ? "3px dashed #FF2222" :
                                                             "none",
 
                                         animation:

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { LiveDriverData } from "../../liveDash/page";
+import { LiveDriverData } from "../../liveDash/year/round/session/page";
 import { Box } from "@mui/material";
 import { LiveDriverPosition, LiveDriverSector, LiveDriverTyre } from "@/app/utils/fetchLiveData";
 import { animate, motion, useMotionValue, useTransform } from "framer-motion";
@@ -215,8 +215,8 @@ const DisplayInterval = ({
     telemetry: LiveDriverData,
     position: number
 }) => {
-    const [interval, setIntervalValue] = useState<number>(0);
-    const [gapToLeader, setGapToLeader] = useState<number>(0);
+    const [interval, setIntervalValue] = useState<string>("0");
+    const [gapToLeader, setGapToLeader] = useState<string>("0");
 
     useEffect(() => {
         if (telemetry.intervals.length === 0) return;
@@ -255,10 +255,9 @@ const DisplayInterval = ({
         };
     }, [telemetry.intervals]);
 
-    const formatTime = (value: number) => `+${value.toFixed(3)}`;
 
-    const displayInterval = position === 1 ? '-.---' : interval == 0 ? "+?.???" : formatTime(interval);
-    const displayGap = position === 1 ? '-.---' : gapToLeader == 0 ? "+?.???" : formatTime(gapToLeader);
+    const displayInterval = position === 1 ? '-.---' : interval == "0" ? "-.---" : interval;
+    const displayGap = position === 1 ? '-.---' : gapToLeader == "0" ? "-.---" : gapToLeader;
 
     return (
         <div style={{ textAlign: 'end', width: 105 }}>
@@ -354,48 +353,48 @@ const DisplayLaptimes = ({
             <div style={{ textAlign: 'end', width: 115 }}>
                 <div style={{ fontSize: '1.2rem', fontWeight: 550 }}>
                     {
-                        lap.duration == 0 ? "?:??.???" : formatLapTime(lap.duration)
+                        lap.duration == 0 ? "-:--.---" : formatLapTime(lap.duration)
                     }
                 </div>
                 <div style={{ fontSize: '0.85rem', color: '#AAA' }}>
                     {
-                        lap.pbDuration == 0 ? "?:??.???" : formatLapTime(lap.pbDuration)
+                        lap.pbDuration == 0 ? "-:--.---" : formatLapTime(lap.pbDuration)
                     }
                 </div>
             </div>
             <div style={{ textAlign: 'end', width: 70 }}>
                 <div style={{ fontSize: '1.2rem', fontWeight: 550 }}>
                     {
-                        s1.duration == 0 ? "??.???" : s1.duration.toFixed(3)
+                        s1.duration == 0 ? "--.---" : s1.duration.toFixed(3)
                     }
                 </div>
                 <div style={{ fontSize: '0.85rem', color: '#AAA' }}>
                     {
-                        s1.pbDuration == 0 ? "??.???" : s1.pbDuration.toFixed(3)
+                        s1.pbDuration == 0 ? "--.---" : s1.pbDuration.toFixed(3)
                     }
                 </div>
             </div>
             <div style={{ textAlign: 'end', width: 70 }}>
                 <div style={{ fontSize: '1.2rem', fontWeight: 550 }}>
                     {
-                        s2.duration == 0 ? "??.???" : s2.duration.toFixed(3)
+                        s2.duration == 0 ? "--.---" : s2.duration.toFixed(3)
                     }
                 </div>
                 <div style={{ fontSize: '0.85rem', color: '#AAA' }}>
                     {
-                        s2.pbDuration == 0 ? "??.???" : s2.pbDuration.toFixed(3)
+                        s2.pbDuration == 0 ? "--.---" : s2.pbDuration.toFixed(3)
                     }
                 </div>
             </div>
             <div style={{ textAlign: 'end', width: 70 }}>
                 <div style={{ fontSize: '1.2rem', fontWeight: 550 }}>
                     {
-                        s3.duration == 0 ? "??.???" : s3.duration.toFixed(3)
+                        s3.duration == 0 ? "--.---" : s3.duration.toFixed(3)
                     }
                 </div>
                 <div style={{ fontSize: '0.85rem', color: '#AAA' }}>
                     {
-                        s3.pbDuration == 0 ? "??.???" : s3.pbDuration.toFixed(3)
+                        s3.pbDuration == 0 ? "--.---" : s3.pbDuration.toFixed(3)
                     }
                 </div>
             </div>

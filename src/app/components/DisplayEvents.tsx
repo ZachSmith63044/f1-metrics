@@ -26,12 +26,19 @@ function EventCard({ event, eventNum }: EventCardProps) {
     const [open, setOpen] = useState<boolean>(false);
 
 
+    const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0, sessionName: "" });
+
+    const handleClick = () => {
+        setContextMenu({ ...contextMenu, visible: false });
+    };
+
+
 
     useEffect(() => {
         const calculateCountdown = () => {
             const now = new Date();
             const upcomingSession = event.sessions.find(
-                ([name, date]) => {console.log(`datefix: ${date}`); return new Date(date).getTime() > now.getTime();}
+                ([name, date]) => { console.log(`datefix: ${date}`); return new Date(date).getTime() > now.getTime(); }
             );
 
             if (upcomingSession) {
@@ -67,44 +74,124 @@ function EventCard({ event, eventNum }: EventCardProps) {
         console.log(event.top3);
     }
 
+    useEffect(() => {
+        const handleClickOutside = (e: any) => {
+            // Optional: add checks if needed (e.g., don't close when clicking inside the menu)
+            setContextMenu((prev) => ({ ...prev, visible: false }));
+        };
+
+        document.addEventListener('click', handleClickOutside);
+
+        return () => {
+            document.removeEventListener('click', handleClickOutside);
+        };
+    }, []);
+
     if (open) {
         return (
-            <Card>
-                <Box padding="7px 7px 7px 10px">
-                    <Box flexDirection={"column"} display={"flex"}>
-                        <Box flexDirection={"row"} display={"flex"} justifyContent="space-between" alignItems={"start"} width={"100%"}>
-                            <Box flexDirection={"row"} display={"flex"} alignItems={"center"} gap={1.5}>
-                                <Typography fontWeight={"bold"} fontSize={22}>
-                                    R{eventNum} - {event.event}
-                                </Typography>
+            <div>
+                {contextMenu.visible && (
+                    <Box
+                        sx={{
+                            position: 'absolute',
+                            top: contextMenu.y,
+                            left: contextMenu.x,
+                            width: 100,
+                            backgroundColor: '#3A3A3A',
+                            borderRadius: 2,
+                            boxShadow: 3,
+                            overflow: 'hidden', // Ensure rounded corners clip content
+                            zIndex: 1000
+                        }}
+                    >
+                        <Button
+                            fullWidth
+                            sx={{
+                                justifyContent: 'flex-start',
+                                borderBottom: '1px solid #ccc',
+                                borderRadius: '8px 8px 0 0', // Rounded top
+                                textTransform: 'none',
+                                color: "#DDD",
+                                '&:hover': {
+                                    backgroundColor: '#444',
+                                },
+                            }}
+                            onClick={() => {
+                                // Handle Open click
+                                setContextMenu((prev) => ({ ...prev, visible: false }));
+                                // Your "Open" action here
+                                router.push(`/session/${event.date.slice(0, 4)}/${eventNum.toString().padStart(2, '0')}) ${event.event}/${contextMenu.sessionName}`);
+                            }}
+                        >
+                            Open
+                        </Button>
 
-                                <img
-                                    src={`flags/${event.country}.svg`}
-                                    alt={`${event.country} flag`}
-                                    style={{ height: "24px", borderRadius: "4px" }}
-                                />
+                        <Button
+                            fullWidth
+                            sx={{
+                                justifyContent: 'flex-start',
+                                borderRadius: '0 0 8px 8px', // Rounded top
+                                textTransform: 'none',
+                                color: "#DDD",
+                                '&:hover': {
+                                    backgroundColor: '#444',
+                                },
+                            }}
+                            disabled={eventNum < 8}
+                            onClick={() => {
+                                // Handle Open click
+                                setContextMenu((prev) => ({ ...prev, visible: false }));
+                                // Your "Open" action here
+                                router.push(`/liveDash/${2025}/${event.event}/${contextMenu.sessionName}`);
+                            }}
+                        >
+                            Replay
+                        </Button>
+                    </Box>
+                )}
+                <Card>
+                    <Box padding="7px 7px 7px 10px">
+                        <Box flexDirection={"column"} display={"flex"}>
+                            <Box flexDirection={"row"} display={"flex"} justifyContent="space-between" alignItems={"start"} width={"100%"}>
+                                <Box flexDirection={"row"} display={"flex"} alignItems={"center"} gap={1.5}>
+                                    <Typography fontWeight={"bold"} fontSize={22}>
+                                        R{eventNum} - {event.event}
+                                    </Typography>
 
-                                <Typography fontSize={20} marginLeft={"10px"}>
-                                    {new Date(event.date).toLocaleDateString("en-US", {
-                                        month: "short",
-                                        day: "numeric",
-                                    })}
-                                </Typography>
+                                    <img
+                                        src={`flags/${event.country}.svg`}
+                                        alt={`${event.country} flag`}
+                                        style={{ height: "24px", borderRadius: "4px" }}
+                                    />
+
+                                    <Typography fontSize={20} marginLeft={"10px"}>
+                                        {new Date(event.date).toLocaleDateString("en-US", {
+                                            month: "short",
+                                            day: "numeric",
+                                        })}
+                                    </Typography>
+                                </Box>
+                                <IconButton onClick={() => { setOpen(false) }} aria-label="close">
+                                    <CloseIcon />
+                                </IconButton>
                             </Box>
-                            <IconButton onClick={() => { setOpen(false) }} aria-label="close">
-                                <CloseIcon />
-                            </IconButton>
-                        </Box>
-                        <Box flexDirection={"row"} display={"flex"} justifyContent="space-between" width={"100%"} padding={"17px"}>
-                            {event.sessions.map(([sessionName], index) => (
-                                <Button key={index} variant="contained" disabled={!event.sessions[index][2]} sx={{ height: "50px", bgcolor: "#DDDDDD" }} onClick={() => { router.push(`/session/${event.date.slice(0, 4)}/${eventNum.toString().padStart(2, '0')}) ${event.event}/${sessionName}`) }}>
-                                    {sessionName}
-                                </Button>
-                            ))}
+                            <Box flexDirection={"row"} display={"flex"} justifyContent="space-between" width={"100%"} padding={"17px"}>
+                                {event.sessions.map(([sessionName], index) => (
+                                    <Button
+                                        onContextMenu={(e) => {
+                                            e.preventDefault();  // Stops default menu
+                                            setContextMenu({ visible: true, x: e.pageX, y: e.pageY, sessionName: sessionName });
+                                        }}
+                                        key={index} variant="contained" disabled={!event.sessions[index][2]} sx={{ height: "50px", bgcolor: "#DDDDDD" }} onClick={() => { router.push(`/session/${event.date.slice(0, 4)}/${eventNum.toString().padStart(2, '0')}) ${event.event}/${sessionName}`) }}>
+                                        {sessionName}
+                                    </Button>
+
+                                ))}
+                            </Box>
                         </Box>
                     </Box>
-                </Box>
-            </Card>
+                </Card>
+            </div>
         );
     }
     else if (event.top3 == undefined) {

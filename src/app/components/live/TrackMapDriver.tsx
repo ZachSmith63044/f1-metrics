@@ -2,7 +2,7 @@
 
 import { motion, useMotionValue, useSpring, useTransform, MotionValue, animate } from "framer-motion";
 import { useEffect, useState } from "react";
-import { LiveDriverData } from "../../liveDash/page";
+import { LiveDriverData } from "../../liveDash/year/round/session/page";
 import { Pos } from "./TrackMapDisplay";
 import { LiveDriverTyre } from "@/app/utils/fetchLiveData";
 
@@ -49,8 +49,8 @@ export const AnimatedDriverDot = ({
     const [drs, setDrs] = useState<number>(0);
     const [telemDelay, setTelemDelay] = useState<number>(0.3);
 
-    const [interval, setInterval] = useState<number>(0);
-    const [gapToLeader, setGapToLeader] = useState<number>(0);
+    const [interval, setInterval] = useState<string>("0");
+    const [gapToLeader, setGapToLeader] = useState<string>("0");
 
     const [pos, setPos] = useState<number>(0); // 0=tl,1=tr,2=br,3=bl
 
@@ -264,13 +264,13 @@ export const AnimatedDriverDot = ({
                     <rect x={(pos == 0 || pos == 3) ? -200 : -20} y={(pos == 0 || pos == 1) ? -20 : 136} width={216} height={106} fill="#444444" rx={5} />
 
                     {/* Driver Tag on the left */}
-                    <foreignObject x={(pos == 0 || pos == 3) ? -188 : -8} y={(pos == 0 || pos == 1) ? (position == 1 || interval == 0 ? 5 : -8) : (position == 1 || interval == 0 ? 160 : 150)} width={70} height={40}>
+                    <foreignObject x={(pos == 0 || pos == 3) ? -188 : -8} y={(pos == 0 || pos == 1) ? (position == 1 || interval == "0" ? 5 : -8) : (position == 1 || interval == "0" ? 160 : 150)} width={70} height={40}>
                         <div>
                             <DriverPositionTag position={position} name={name} colour={colour} />
                         </div>
                     </foreignObject>
 
-                    <foreignObject x={(pos == 0 || pos == 3) ? -205 : -25} y={(pos == 0 || pos == 1) ? (position == 1 || interval == 0 ? 43 : 48) : (position == 1 || interval == 0 ? 200 : 205)} width={80} height={40}>
+                    <foreignObject x={(pos == 0 || pos == 3) ? -205 : -25} y={(pos == 0 || pos == 1) ? (position == 1 || interval == "0" ? 43 : 48) : (position == 1 || interval == "0" ? 200 : 205)} width={80} height={40}>
                         <div style={{ marginLeft: 20, display: 'flex', gap: 4, alignItems: "center", fontWeight: "bold" }}>
                             <img
                                 src={`/tyres/${tyre.compound.toLowerCase()}.svg`}
@@ -282,9 +282,9 @@ export const AnimatedDriverDot = ({
                         </div>
                     </foreignObject>
                     {
-                        position != 1 && interval != -1 &&
+                        position != 1 && interval != "0" &&
                         <text x={(pos == 0 || pos == 3) ? -154 : 26} y={(pos == 0 || pos == 1) ? 42 : 200} textAnchor="middle" fontWeight="bold" fill="white">
-                            +{interval.toFixed(3)}
+                            {interval}
                         </text>
                     }
 

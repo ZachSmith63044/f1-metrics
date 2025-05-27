@@ -9,14 +9,18 @@ export class LiveSession {
 	country: string;
 	laps: number;
 	marshalSectors: number[];
+	startDate: Date;
 
-	constructor(session: string, name: string, rotation: number, country: string, laps: number, marshalSectors: number[]) {
+	constructor(session: string, name: string, rotation: number, country: string, laps: number, marshalSectors: number[], date: Date) {
 		this.session = session;
 		this.name = name;
 		this.rotation = rotation;
 		this.country = country;
 		this.laps = laps;
 		this.marshalSectors = marshalSectors;
+		const offsetMilliseconds = date.getTimezoneOffset() * 60 * 1000;
+		const normalizedDate = new Date(date.getTime() + offsetMilliseconds);
+		this.startDate = normalizedDate;
 	}
 
 	toString(): string {
@@ -24,9 +28,9 @@ export class LiveSession {
 	}
 }
 
-export async function getLiveSession(): Promise<LiveSession> {
+export async function getLiveSession(year: String, eventName: String, sessionName: String): Promise<LiveSession> {
 	const storage = getStorage();
-	const sessionRef = ref(storage, "LiveData/session.json");
+	const sessionRef = ref(storage, `LiveData/${year}/${eventName}/${sessionName}/session.json`);
 	const data = await getBytes(sessionRef);
 
 	const jsonStr = new TextDecoder("utf-8").decode(data);
@@ -38,7 +42,8 @@ export async function getLiveSession(): Promise<LiveSession> {
 		jsonData["rotation"],
 		jsonData["country"],
 		jsonData["laps"],
-		jsonData["marshals"]
+		jsonData["marshals"],
+		new Date(new Date(jsonData["start"]).getTime() + 550000)
 	);
 }
 
@@ -60,9 +65,9 @@ export class LiveDriver {
 	}
 }
 
-export async function getLiveDrivers(): Promise<LiveDriver[]> {
+export async function getLiveDrivers(year: String, eventName: String, sessionName: String): Promise<LiveDriver[]> {
 	const storage = getStorage();
-	const sessionRef = ref(storage, "LiveData/drivers.json");
+	const sessionRef = ref(storage, `LiveData/${year}/${eventName}/${sessionName}/drivers.json`);
 	const data = await getBytes(sessionRef);
 
 	const jsonStr = new TextDecoder("utf-8").decode(data);
@@ -100,8 +105,8 @@ export interface LiveDriverPosition {
 
 export interface LiveDriverInterval {
 	driverNum: number;
-	gapToLeader: number;
-	interval: number;
+	gapToLeader: string;
+	interval: string;
 	time: Date;
 }
 
@@ -158,8 +163,14 @@ function formatDateCustom(date: Date): string {
 	return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}${microseconds}+00:00.ld`;
 }
 
-export async function getLiveData(time: Date, marshalSectorsNum: number): Promise<LiveData> {
-	const sessionRef: StorageReference = ref(storage, `LiveData/${formatDateCustom(time)}`);
+
+
+const formatTime = (value: number) => `+${value.toFixed(3)}`;
+
+
+
+export async function getLiveData(time: Date, marshalSectorsNum: number, year: String, eventName: String, sessionName: String): Promise<LiveData> {
+	const sessionRef: StorageReference = ref(storage, `LiveData/${year}/${eventName}/${sessionName}/${formatDateCustom(time)}`);
 	const blob = await getBlob(sessionRef);
 	const arrayBuffer = await blob.arrayBuffer();
 	const uint8Array = new Uint8Array(arrayBuffer);
@@ -198,15 +209,13 @@ export async function getLiveData(time: Date, marshalSectorsNum: number): Promis
 		const y = binToInt(boolList.splice(0, 16), true);
 		const timeAdd = binToInt(boolList.splice(0, 12));
 		const timeSplit = new Date(time.getTime() + timeAdd);
-		if (driverNum >= 100)
-		{
+		if (driverNum >= 100) {
 			console.log(`driverNum: ${driverNum}`);
 		}
 		positions.push({ driverNum: driverNum, x: -x, y: y, time: timeSplit });
 	}
 
-	if (positions.length != length)
-	{
+	if (positions.length != length) {
 		console.log("ERROR DEBUG")
 	}
 
@@ -230,11 +239,25 @@ export async function getLiveData(time: Date, marshalSectorsNum: number): Promis
 
 	for (let i = 0; i < length; i++) {
 		let driverNum = binToInt(boolList.splice(0, 7));
-		let gapToLeader = binToInt(boolList.splice(0, 20)) / 1000;
-		let interval = binToInt(boolList.splice(0, 20)) / 1000;
+		let leaderLapped = boolList.splice(0, 1)[0];
+		let gapToLeader: string = "0";
+		let interval: string = "0";
+		if (leaderLapped) {
+			gapToLeader = `${binToInt(boolList.splice(0, 8))}L`;
+		}
+		else {
+			gapToLeader = formatTime(binToInt(boolList.splice(0, 20)) / 1000);
+		}
+		let intervalLapped = boolList.splice(0, 1)[0];
+		if (intervalLapped) {
+			gapToLeader = `${binToInt(boolList.splice(0, 8))}L`;
+		}
+		else {
+			interval = formatTime(binToInt(boolList.splice(0, 20)) / 1000);
+		}
 		const timeAdd = binToInt(boolList.splice(0, 12));
 		let timestamp = new Date(time.getTime() + timeAdd);
-		driverIntervals.push({ driverNum: driverNum, gapToLeader: gapToLeader, interval: interval, time: timestamp });
+		driverIntervals.push({ driverNum: driverNum, gapToLeader: gapToLeader.toString(), interval: interval.toString(), time: timestamp });
 	}
 
 	let driverSectors: LiveDriverSector[] = [];
@@ -272,15 +295,14 @@ export async function getLiveData(time: Date, marshalSectorsNum: number): Promis
 
 	let trackState = binToInt(boolList.splice(0, 3));
 
-	if (lapNumber != 250)
-	{
+	if (lapNumber != 250) {
 		console.log(`ERROR LAP NUM ${boolList.length}`);
 	}
-	else
-	{
+	else {
 		console.log(`ERROR LAP NUM NONE ${boolList.length}`);
 	}
 	console.log(lapNumber);
+	console.log(trackState);
 	console.log(boolList.length);
 
 	// let marshalSectorsFull: LiveMarshalSectors[] = [];
@@ -314,8 +336,8 @@ export interface Pos {
 	y: number;
 }
 
-export async function getTrackMap(): Promise<Pos[]> {
-	const sessionRef: StorageReference = ref(storage, `LiveData/map.tm`);
+export async function getTrackMap(year: String, eventName: String, sessionName: String): Promise<Pos[]> {
+	const sessionRef: StorageReference = ref(storage, `LiveData/${year}/${eventName}/${sessionName}/map.tm`);
 	const blob = await getBlob(sessionRef);
 	const arrayBuffer = await blob.arrayBuffer();
 	const uint8Array = new Uint8Array(arrayBuffer);
@@ -371,13 +393,12 @@ async function getLaps(driverNumber: number): Promise<LiveLapData[]> {
 
 		const sortedList = Array.from(new Set<number>(laps.map((x) => x.stint))).sort((a, b) => a - b);
 
-		for (let i = 0; i < laps.length; i++)
-		{
+		for (let i = 0; i < laps.length; i++) {
 			laps[i].stint = sortedList.indexOf(laps[i].stint) + 1;
 		}
 	}
 	catch (e) {
-		
+
 	}
 
 	return laps;
