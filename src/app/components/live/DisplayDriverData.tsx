@@ -1,14 +1,16 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { LiveDriverData } from "../../liveDash/year/round/session/page";
-import { Box } from "@mui/material";
+import { LiveDriverData } from "../../liveDash/[year]/[round]/[session]/page";
+import { Box, Button } from "@mui/material";
 import { LiveDriverPosition, LiveDriverSector, LiveDriverTyre } from "@/app/utils/fetchLiveData";
-import { animate, motion, useMotionValue, useTransform } from "framer-motion";
+import { animate, motion, Reorder, useMotionValue, useTransform } from "framer-motion";
 
 
 interface DisplayDriverDataProps {
     positions: LiveDriverPosition[];
     drivers: { [key: string]: LiveDriverData };
     showTelem: boolean;
+    onClick: Function;
+    driversActive: number;
 }
 
 
@@ -16,6 +18,8 @@ export const DisplayDriverData: React.FC<DisplayDriverDataProps> = ({
     positions,
     drivers,
     showTelem,
+    onClick,
+    driversActive
 }) => {
     const [currentPositions, setCurrentPositions] = useState<number[]>([]);
 
@@ -27,75 +31,106 @@ export const DisplayDriverData: React.FC<DisplayDriverDataProps> = ({
             for (let i = 0; i < positions.length; i++) {
                 if (positions[i].time <= new Date()) {
                     currentPos = positions[i].driverNums;
-                }
-                else {
+                } else {
                     timeUntil = (positions[i].time.getTime() - (new Date()).getTime());
                     break;
                 }
             }
-
             setCurrentPositions(currentPos);
-
             if (timeUntil != -1) {
                 timeout = setTimeout(updatePositions, timeUntil);
             }
         };
-
         updatePositions();
     }, [positions]);
 
-
     return (
         <Box padding={2}>
-            {
-                currentPositions.map((number, index) => {
-                    return (
-                        <Box flexDirection={"row"} display={"flex"} alignItems={"center"} mb={1} key={drivers[`${number}`].driver.driverNumber}>
-                            <div
-                                style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "space-between",
-                                    backgroundColor: drivers[`${number}`].driver.teamColour,
-                                    borderRadius: "8px",
-                                    padding: "6px 6px 6px 8px",
-                                    color: "white",
-                                    fontFamily: "sans-serif",
-                                    fontWeight: "bold",
-                                    width: 87,
-                                    height: 42,
-                                    marginRight: 6,
-                                }}
-                            >
-                                <div style={{ fontSize: 19 }}>{index + 1}</div>
-                                <div
-                                    style={{
-                                        backgroundColor: "white",
-                                        color: drivers[`${number}`].driver.teamColour,
-                                        borderRadius: "6px",
-                                        width: 45,
-                                        height: 30,
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        fontSize: 17,
-                                    }}
-                                >
-                                    {drivers[`${number}`].driver.driver}
-                                </div>
-                            </div>
-                            {
-                                showTelem &&
-                                <DriverTelemetryData telemetry={drivers[`${number}`]} />
-                            }
-                            <DisplayInterval telemetry={drivers[`${number}`]} position={index + 1} />
-                            <DisplayLaptimes telemetry={drivers[`${number}`]} />
-                            <DisplayTyres telemetry={drivers[`${number}`]} />
-                        </Box>
+            <Reorder.Group axis="y" values={currentPositions} onReorder={setCurrentPositions}>
+                {currentPositions.map((number, index) => {
+                    const driver = drivers[`${number}`];
+                    if (!driver) return null;
 
+                    return (
+                        <Reorder.Item key={number} value={number} style={{ listStyle: "none" }} dragListener={false} drag={false}>
+                            <motion.div
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: 10 }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                <Box
+                                    bgcolor={index % 2 == 0 ? "#0005" : "#0009"}
+                                    padding={"4px 16px 4px 10px"}
+                                    borderRadius={index == 0 ? "10px 10px 0px 0px" : index == currentPositions.length - 1 ? "0px 0px 10px 10px" : "0px"}
+                                    position="relative"
+                                >
+                                    {index >= driversActive && (
+                                        <Box
+                                            position="absolute"
+                                            top={0}
+                                            left={0}
+                                            right={0}
+                                            bottom={0}
+                                            bgcolor="#0004"
+                                            borderRadius={index == 0 ? "10px 10px 0px 0px" : index == currentPositions.length - 1 ? "0px 0px 10px 10px" : "0px"}
+                                            zIndex={2}
+                                        />
+                                    )}
+
+                                    <Box flexDirection={"row"} display={"flex"} alignItems={"center"}>
+                                        <Button
+                                            style={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "start",
+                                                border: "none",
+                                                borderRadius: "10px",
+                                                color: "white",
+                                                fontSize: "18px",
+                                                width: "108px",
+                                                height: "50px",
+                                                cursor: "pointer",
+                                                textTransform: "none",
+                                            }}
+                                            onClick={() => {
+                                                console.log(driver);
+                                                onClick(number);
+                                            }}
+                                        >
+                                            <div style={{
+                                                fontSize: "22px",
+                                                width: "24px",
+                                                marginRight: "10px",
+                                                fontWeight: "bold",
+                                                display: "flex",
+                                                justifyContent: "flex-end",
+                                            }}>
+                                                {index + 1}
+                                            </div>
+                                            <div style={{
+                                                backgroundColor: driver.driver.teamColour,
+                                                width: "6px",
+                                                height: "30px",
+                                                marginRight: "8px"
+                                            }} />
+                                            <div style={{ display: "flex", alignItems: "baseline", fontWeight: "bold" }}>
+                                                <span style={{ fontWeight: "bold" }}>
+                                                    {driver.driver.driver.split(" ")[0]}
+                                                </span>
+                                            </div>
+                                        </Button>
+
+                                        <DisplayInterval telemetry={driver} position={index + 1} />
+                                        <DisplayLaptimes telemetry={driver} />
+                                        <DisplayTyres telemetry={driver} />
+                                    </Box>
+                                </Box>
+                            </motion.div>
+                        </Reorder.Item>
                     );
-                })
-            }
+                })}
+            </Reorder.Group>
         </Box>
     );
 };
@@ -260,7 +295,7 @@ const DisplayInterval = ({
     const displayGap = position === 1 ? '-.---' : gapToLeader == "0" ? "-.---" : gapToLeader;
 
     return (
-        <div style={{ textAlign: 'end', width: 105 }}>
+        <div style={{ textAlign: 'end', width: 100 }}>
             <div style={{ fontSize: '1.4rem', fontWeight: 600 }}>
                 {displayInterval}
             </div>
@@ -276,10 +311,10 @@ const DisplayLaptimes = ({
 }: {
     telemetry: LiveDriverData
 }) => {
-    const [lap, setLap] = useState<LiveDriverSector>({ driverNum: 0, duration: 0, pbDuration: 0, sectorNum: 0, time: new Date() });
-    const [s1, setS1] = useState<LiveDriverSector>({ driverNum: 0, duration: 0, pbDuration: 0, sectorNum: 0, time: new Date() });
-    const [s2, setS2] = useState<LiveDriverSector>({ driverNum: 0, duration: 0, pbDuration: 0, sectorNum: 0, time: new Date() });
-    const [s3, setS3] = useState<LiveDriverSector>({ driverNum: 0, duration: 0, pbDuration: 0, sectorNum: 0, time: new Date() });
+    const [lap, setLap] = useState<LiveDriverSector>({ driverNum: 0, duration: 0, pbDuration: 0, sectorNum: 0, time: new Date(), normalTiming: true });
+    const [s1, setS1] = useState<LiveDriverSector>({ driverNum: 0, duration: 0, pbDuration: 0, sectorNum: 0, time: new Date(), normalTiming: true });
+    const [s2, setS2] = useState<LiveDriverSector>({ driverNum: 0, duration: 0, pbDuration: 0, sectorNum: 0, time: new Date(), normalTiming: true });
+    const [s3, setS3] = useState<LiveDriverSector>({ driverNum: 0, duration: 0, pbDuration: 0, sectorNum: 0, time: new Date(), normalTiming: true });
 
     useEffect(() => {
         if (telemetry.sectors.length === 0) return;

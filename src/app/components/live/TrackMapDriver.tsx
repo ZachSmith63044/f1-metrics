@@ -2,9 +2,10 @@
 
 import { motion, useMotionValue, useSpring, useTransform, MotionValue, animate } from "framer-motion";
 import { useEffect, useState } from "react";
-import { LiveDriverData } from "../../liveDash/year/round/session/page";
+import { LiveDriverData } from "../../liveDash/[year]/[round]/[session]/page";
 import { Pos } from "./TrackMapDisplay";
 import { LiveDriverTyre } from "@/app/utils/fetchLiveData";
+import { Box } from "@mui/material";
 
 export const AnimatedDriverDot = ({
     name,
@@ -106,15 +107,15 @@ export const AnimatedDriverDot = ({
 
                 if (next.x < (rotatedMaxX + rotatedMinX) / 2) {
                     if (next.y < (rotatedMaxY + rotatedMinY) / 2) {
-                        setPos(0); // top-left
+                        setPos(2); // top-left
                     } else {
-                        setPos(3); // bottom-left
+                        setPos(1); // bottom-left
                     }
                 } else {
                     if (next.y < (rotatedMaxY + rotatedMinY) / 2) {
-                        setPos(1); // top-right
+                        setPos(3); // top-right
                     } else {
-                        setPos(2); // bottom-right
+                        setPos(0); // bottom-right
                     }
                 }
 
@@ -457,36 +458,78 @@ export const DriverPositionTag = ({
     colour: string;
 }) => {
     return (
-        <div
+        <Box
             style={{
                 display: "flex",
                 alignItems: "center",
-                backgroundColor: colour,
+                justifyContent: "start",
+                border: "none",
                 borderRadius: "8px",
-                padding: "4px 4px",
                 color: "white",
-                fontFamily: "sans-serif",
-                fontWeight: "bold",
-                gap: "8px",
-                minWidth: 30,
+                fontSize: "18px",
+                height: "25px",
+                cursor: "pointer",
+                backgroundColor: "#FFF3",
+                textTransform: "none",
+                padding: "6px"
             }}
         >
-            <div
-                style={{
-                    backgroundColor: "white",
-                    color: colour,
-                    borderRadius: "6px",
-                    width: 100,
-                    height: 22,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: 12,
-                }}
-            >
+            {/* Position Number */}
+            <div style={{
+                fontSize: "13px",
+                marginRight: "5px",
+                fontWeight: "bold",
+                display: "flex",
+                justifyContent: "flex-end",
+            }}>
                 {position}
             </div>
-            <div style={{ fontSize: 14 }}>{name}</div>
-        </div>
+
+            {/* Vertical Bar with Team Color */}
+            <div style={{
+                backgroundColor: colour,
+                width: "3px",
+                height: "16px",
+                marginRight: "4px"
+            }} />
+
+            {/* Driver Name */}
+            <div style={{ display: "flex", alignItems: "baseline", fontWeight: "bold", fontSize: "13px" }}>
+                {name}
+            </div>
+        </Box>
+
+
+        // <div
+        //     style={{
+        //         display: "flex",
+        //         alignItems: "center",
+        //         backgroundColor: colour,
+        //         borderRadius: "8px",
+        //         padding: "4px 4px",
+        //         color: "white",
+        //         fontFamily: "sans-serif",
+        //         fontWeight: "bold",
+        //         gap: "8px",
+        //         minWidth: 30,
+        //     }}
+        // >
+        //     <div
+        //         style={{
+        //             backgroundColor: "white",
+        //             color: colour,
+        //             borderRadius: "6px",
+        //             width: 100,
+        //             height: 22,
+        //             display: "flex",
+        //             alignItems: "center",
+        //             justifyContent: "center",
+        //             fontSize: 12,
+        //         }}
+        //     >
+        //         {position}
+        //     </div>
+        //     <div style={{ fontSize: 14 }}>{name}</div>
+        // </div>
     );
 };

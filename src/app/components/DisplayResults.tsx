@@ -9,6 +9,7 @@ import {
     Typography,
     Box,
     Skeleton,
+    Button,
 } from '@mui/material';
 import { PracticeResult, QualiResult, RaceResult } from '../utils/fetchResults';
 
@@ -16,6 +17,7 @@ import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import RemoveIcon from '@mui/icons-material/Remove';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import { useRouter } from 'next/navigation';
 
 
 function formatRaceTime(result: RaceResult, maxLaps: number): string {
@@ -39,8 +41,7 @@ function formatRaceTime(result: RaceResult, maxLaps: number): string {
 }
 
 function formatToMinSecMillis(seconds: number): string {
-    if (seconds == -1)
-    {
+    if (seconds == -1) {
         return "nan";
     }
     const mins = Math.floor(seconds / 60);
@@ -63,15 +64,38 @@ interface RaceResultsTableProps {
 
 export const RaceResultsTable: React.FC<RaceResultsTableProps> = ({ results, year, round, session }) => {
     let maxLaps = Math.max(...results.map((x) => x.lapsCompleted));
+    const router = useRouter();
 
     let fastestLap = Math.min(...results.map((x) => x.fastestLap == -1 ? 999 : x.fastestLap));
 
     return (
         <Box padding={"20px"} sx={{ width: '1300px', maxWidth: '100%' }} >
             <TableContainer component={Paper} style={{ borderRadius: 12 }}>
-                <Typography fontWeight={"bold"} fontSize={22} sx={{ m: 2 }}>
-                    {year} {round.slice(3)} {session} Results
-                </Typography>
+                <Box display={"flex"} flexDirection={"row"} alignItems={"center"} gap={1}>
+                    <Typography fontWeight={"bold"} fontSize={22} sx={{ m: 2 }}>
+                        {year} {round.slice(3)} {session} Results
+                    </Typography>
+                    <Button
+                        sx={{
+                            height: "40px",
+                            color: "#fff",
+                            backgroundColor: "#FFFFFF11",
+                            fontWeight: "bold",
+                            '&:hover': {
+                                backgroundColor: "#444",
+                                borderColor: "#fff",
+                            },
+                            textTransform: "none",
+                            px: 2,
+                            borderRadius: "8px",
+                        }}
+                        onClick={() => {
+                            router.push(`/liveDash/${year}/${round.slice(4)}/${session}`);
+                        }}
+                    >
+                        Replay
+                    </Button>
+                </Box>
                 <Table>
                     <TableHead>
                         <TableRow>
@@ -255,12 +279,36 @@ export const QualiResultsTable: React.FC<QualiResultsTableProps> = ({ results, y
     let fastq2 = Math.min(...results.map((x) => x.q2 == -1 ? 9999 : x.q2));
     let fastq3 = Math.min(...results.map((x) => x.q3 == -1 ? 9999 : x.q3));
 
+    const router = useRouter();
+
     return (
         <Box padding={"20px"} sx={{ width: '1300px', maxWidth: '100%' }} >
             <TableContainer component={Paper} style={{ borderRadius: 12 }}>
-                <Typography fontWeight={"bold"} fontSize={22} sx={{ m: 2 }}>
-                    {year} {round.slice(3)} {session} Results
-                </Typography>
+                <Box display={"flex"} flexDirection={"row"} alignItems={"center"} gap={1}>
+                    <Typography fontWeight={"bold"} fontSize={22} sx={{ m: 2 }}>
+                        {year} {round.slice(3)} {session} Results
+                    </Typography>
+                    <Button
+                        sx={{
+                            height: "40px",
+                            color: "#fff",
+                            backgroundColor: "#FFFFFF11",
+                            fontWeight: "bold",
+                            '&:hover': {
+                                backgroundColor: "#444",
+                                borderColor: "#fff",
+                            },
+                            textTransform: "none",
+                            px: 2,
+                            borderRadius: "8px",
+                        }}
+                        onClick={() => {
+                            router.push(`/liveDash/${year}/${round.slice(4)}/${session}`);
+                        }}
+                    >
+                        Replay
+                    </Button>
+                </Box>
                 <Table>
                     <TableHead>
                         <TableRow>
@@ -353,12 +401,36 @@ interface PracticeResultsTableProps {
 export const PracticeResultsTable: React.FC<PracticeResultsTableProps> = ({ results, year, round, session }) => {
     let fastestLap = Math.min(...results.map((x) => x.fastestLap == -1 ? 9999 : x.fastestLap));
 
+    const router = useRouter();
+
     return (
         <Box padding={"20px"} sx={{ width: '1300px', maxWidth: '100%' }} >
             <TableContainer component={Paper} style={{ borderRadius: 12 }}>
-                <Typography fontWeight={"bold"} fontSize={22} sx={{ m: 2 }}>
-                    {year} {round.slice(3)} {session} Results
-                </Typography>
+                <Box display={"flex"} flexDirection={"row"} alignItems={"center"} gap={1}>
+                    <Typography fontWeight={"bold"} fontSize={22} sx={{ m: 2 }}>
+                        {year} {round.slice(3)} {session} Results
+                    </Typography>
+                    <Button
+                        sx={{
+                            height: "40px",
+                            color: "#fff",
+                            backgroundColor: "#FFFFFF11",
+                            fontWeight: "bold",
+                            '&:hover': {
+                                backgroundColor: "#444",
+                                borderColor: "#fff",
+                            },
+                            textTransform: "none",
+                            px: 2,
+                            borderRadius: "8px",
+                        }}
+                        onClick={() => {
+                            router.push(`/liveDash/${year}/${round.slice(4)}/${session}`);
+                        }}
+                    >
+                        Replay
+                    </Button>
+                </Box>
                 <Table>
                     <TableHead>
                         <TableRow>

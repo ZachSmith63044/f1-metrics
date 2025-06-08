@@ -6,7 +6,15 @@ import { AppBar, Toolbar, Button, Box, Typography, Avatar } from "@mui/material"
 import { exo2, exo2Regular } from "../styles";
 import { onAuthStateChanged, User, getAuth } from 'firebase/auth'; // Import User type
 import { auth } from '../firebaseConfig';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from "../firebaseConfig";
 
+interface LiveSession {
+  live: boolean;
+  year: string;
+  round: string;
+  session: string;
+}
 
 export default function Navbar() {
   const [user, setUser] = useState<User | null>(null); // Explicitly type as User | null
@@ -18,6 +26,33 @@ export default function Navbar() {
 
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {getLiveSessionData()}, []);
+
+  const [session, setSession] = useState<LiveSession>({ live: false, year: "", round: "", session: "" });
+
+
+  async function getLiveSessionData() {
+    const docRef = doc(db, "live", "session");
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      const data = docSnap.data() as Partial<{
+        live: boolean;
+        year: string;
+        round: string;
+        session: string;
+      }>;
+      if (data.live == true && data.year && data.round && data.session) {
+        setSession({
+          live: data.live,
+          year: data.year,
+          round: data.round,
+          session: data.session
+        });
+      }
+    }
+  }
 
 
 
@@ -38,37 +73,39 @@ export default function Navbar() {
           </Typography>
         </Button>
         <Box sx={{ marginLeft: "auto" }} flexDirection={"row"} display={"flex"} gap={2} alignItems={"center"}>
-          <Button
-            variant="outlined"
-            sx={{
-              color: 'red',
-              borderColor: 'red',
-              fontWeight: 'bold',
-              ml: 2,
-              textTransform: 'none',
-              fontFamily: exo2Regular.style.fontFamily,
-              display: 'flex',
-              alignItems: 'center',
-              px: 1.5,
-              py: 0.5,
-              borderRadius: '12px',
-              height: "38px"
-            }}
-            component={Link}
-            href="/liveDash"
-          >
-            <Box
+          {
+            session.live && <Button
+              variant="outlined"
               sx={{
-                width: 10,
-                height: 10,
-                borderRadius: '50%',
-                backgroundColor: 'red',
-                marginRight: 1,
-                animation: 'flash 1s infinite ease-in-out',
+                color: 'red',
+                borderColor: 'red',
+                fontWeight: 'bold',
+                ml: 2,
+                textTransform: 'none',
+                fontFamily: exo2Regular.style.fontFamily,
+                display: 'flex',
+                alignItems: 'center',
+                px: 1.5,
+                py: 0.5,
+                borderRadius: '12px',
+                height: "38px"
               }}
-            />
-            LIVE
-          </Button>
+              component={Link}
+              href={`/liveDash/${session.year}/${session.round}/${session.session}`}
+            >
+              <Box
+                sx={{
+                  width: 10,
+                  height: 10,
+                  borderRadius: '50%',
+                  backgroundColor: 'red',
+                  marginRight: 1,
+                  animation: 'flash 1s infinite ease-in-out',
+                }}
+              />
+              LIVE
+            </Button>
+          }
           {user ? (
             <Button
               color="inherit"

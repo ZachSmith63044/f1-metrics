@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { LiveDriverData } from "../../liveDash/year/round/session/page";
+import { LiveDriverData } from "../../liveDash/[year]/[round]/[session]/page";
 import { AnimatedDriverDot } from "./TrackMapDriver";
 
 export interface Pos {

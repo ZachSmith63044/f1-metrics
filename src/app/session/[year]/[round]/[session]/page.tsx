@@ -121,38 +121,50 @@ export default function SessionDash() {
                     exclusive
                     onChange={handleChange}
                     size="small"
-                    sx={{ borderRadius: 5 }}
+                    sx={{
+                        borderRadius: 2,
+                        backgroundColor: '#1c1c1c',
+                        flexWrap: 'wrap',
+                    }}
                 >
-                    <ToggleButton value="results" sx={toggleSx}>
-                        Results
-                    </ToggleButton>
-                    <ToggleButton value="strategy" sx={toggleSx}>
-                        Strategy
-                    </ToggleButton>
-                    {
-                        (session === "Race" || session === "Sprint") && (
-                            <ToggleButton value="positions" sx={toggleSx}>
-                                Position Changes
-                            </ToggleButton>
-                        )
-                    }
-
-                    <ToggleButton value="laptimes" sx={toggleSx}>
-                        Lap Times
-                    </ToggleButton>
-                    {
-                        session == "Race" &&
-                        <ToggleButton value="pitperformance" sx={toggleSx}>
-                            Pit Performance
+                    {[
+                        { label: 'Results', value: 'results' },
+                        { label: 'Strategy', value: 'strategy' },
+                        ...(session === 'Race' || session === 'Sprint' ? [{ label: 'Position Changes', value: 'positions' }] : []),
+                        { label: 'Lap Times', value: 'laptimes' },
+                        ...(session === 'Race' ? [{ label: 'Pit Performance', value: 'pitperformance' }] : []),
+                        { label: 'Min/Max Speed', value: 'maxspeed' },
+                        { label: 'Telemetry Comparison', value: 'telemetry' },
+                    ].map(({ label, value }) => (
+                        <ToggleButton
+                            key={value}
+                            value={value}
+                            sx={{
+                                textTransform: 'none',
+                                color: '#aaa',
+                                border: '1px solid #333',
+                                borderRadius: 2,
+                                px: 2,
+                                py: 1,
+                                fontWeight: 500,
+                                fontSize: '0.875rem',
+                                transition: 'all 0.2s ease-in-out',
+                                '&.Mui-selected': {
+                                    color: '#fff',
+                                    backgroundColor: '#444',
+                                    borderColor: '#666',
+                                },
+                                '&:hover': {
+                                    backgroundColor: '#333',
+                                    borderColor: '#555',
+                                },
+                            }}
+                        >
+                            {label}
                         </ToggleButton>
-                    }
-                    <ToggleButton value="maxspeed" sx={toggleSx}>
-                        Min/Max Speed
-                    </ToggleButton>
-                    <ToggleButton value="telemetry" sx={toggleSx}>
-                        Telemetry Comparison
-                    </ToggleButton>
+                    ))}
                 </ToggleButtonGroup>
+
 
                 {
                     selection == "results" ?

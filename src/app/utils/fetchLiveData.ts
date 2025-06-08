@@ -36,6 +36,8 @@ export async function getLiveSession(year: String, eventName: String, sessionNam
 	const jsonStr = new TextDecoder("utf-8").decode(data);
 	const jsonData = JSON.parse(jsonStr);
 
+	console.log(jsonData);
+
 	return new LiveSession(
 		jsonData["session"],
 		jsonData["event"],
@@ -43,7 +45,7 @@ export async function getLiveSession(year: String, eventName: String, sessionNam
 		jsonData["country"],
 		jsonData["laps"],
 		jsonData["marshals"],
-		new Date(new Date(jsonData["start"]).getTime() + 550000)
+		new Date(new Date(jsonData["start"]).getTime())
 	);
 }
 
@@ -116,6 +118,15 @@ export interface LiveDriverSector {
 	pbDuration: number;
 	sectorNum: number;
 	time: Date;
+	normalTiming: boolean;
+}
+
+export interface LiveDriverSectorTiming {
+	driverNum: number;
+	time: Date;
+	s1: boolean;
+	s2: boolean;
+	s3: boolean;
 }
 
 export interface LiveDriverTyre {
@@ -123,6 +134,20 @@ export interface LiveDriverTyre {
 	tyreAge: number;
 	compound: string;
 	time: Date;
+}
+
+export interface LiveDriverLap {
+	driverNum: number;
+	s1: number;
+	s2: number;
+	s3: number;
+	lapTime: number;
+}
+
+export interface FastestSectors {
+	s1: number;
+	s2: number;
+	s3: number;
 }
 
 // export interface LiveMarshalSectors {
@@ -139,6 +164,10 @@ export interface LiveData {
 	driverTyres: LiveDriverTyre[];
 	lapNumber: number;
 	trackState: number;
+	driverLiveTiming: LiveDriverSectorTiming[];
+	fastestSectors: FastestSectors;
+	fastestLaps: { [key: string]: LiveDriverLap };
+	driversActive: number;
 	// marshalSectors: LiveMarshalSectors[];
 }
 
@@ -165,7 +194,21 @@ function formatDateCustom(date: Date): string {
 
 
 
-const formatTime = (value: number) => `+${value.toFixed(3)}`;
+const formatTime = (value: number) => {
+	if (value == 0) {
+		return `-.---`;
+	}
+	else {
+		if (value > 60)
+		{
+			return `${Math.floor(value/60)}:${(value % 60).toFixed(3)}`;
+		}
+		else
+		{
+			return `+${value.toFixed(3)}`;
+		}
+	}
+};
 
 
 
@@ -215,10 +258,6 @@ export async function getLiveData(time: Date, marshalSectorsNum: number, year: S
 		positions.push({ driverNum: driverNum, x: -x, y: y, time: timeSplit });
 	}
 
-	if (positions.length != length) {
-		console.log("ERROR DEBUG")
-	}
-
 	length = binToInt(boolList.splice(0, 7));
 
 	let driverPositions: LiveDriverPosition[] = [];
@@ -262,8 +301,6 @@ export async function getLiveData(time: Date, marshalSectorsNum: number, year: S
 
 	let driverSectors: LiveDriverSector[] = [];
 	length = binToInt(boolList.splice(0, 8));
-	console.log(length);
-	console.log("LENGTHSS driverSectors");
 
 	for (let i = 0; i < length; i++) {
 		let driverNum = binToInt(boolList.splice(0, 7));
@@ -272,17 +309,14 @@ export async function getLiveData(time: Date, marshalSectorsNum: number, year: S
 		let sectorNum = binToInt(boolList.splice(0, 2));
 		const timeAdd = binToInt(boolList.splice(0, 12));
 		let timestamp = new Date(time.getTime() + timeAdd);
-		driverSectors.push({ driverNum: driverNum, duration: duration, pbDuration: pbDuration, sectorNum: sectorNum, time: timestamp });
+		driverSectors.push({ driverNum: driverNum, duration: duration, pbDuration: pbDuration, sectorNum: sectorNum, time: timestamp, normalTiming: timestamp.getTime() % 2500 == 0 });
 	}
 
-	console.log(driverSectors.length);
 
 	let driverTyres: LiveDriverTyre[] = [];
 	length = binToInt(boolList.splice(0, 5));
 	let compounds = ["SOFT", "MEDIUM", "HARD", "INTERMEDIATE", "WET", "UNKNOWN"];
 
-	console.log(length);
-	console.log("LENGTHSS");
 
 	for (let i = 0; i < length; i++) {
 		let driverNum = binToInt(boolList.splice(0, 7));
@@ -291,19 +325,66 @@ export async function getLiveData(time: Date, marshalSectorsNum: number, year: S
 		driverTyres.push({ driverNum: driverNum, compound: compound, tyreAge: tyreAge, time: time });
 	}
 
+
+	let driverLiveTiming: LiveDriverSectorTiming[] = [];
+
+	length = binToInt(boolList.splice(0, 5));
+	for (let i = 0; i < length; i++) {
+		let driverNum = binToInt(boolList.splice(0, 7));
+		let msBefore = binToInt(boolList.splice(0, 24));
+		let s1 = boolList.splice(0, 1)[0];
+		let s2 = boolList.splice(0, 1)[0];
+		let s3 = boolList.splice(0, 1)[0];
+		driverLiveTiming.push({ driverNum: driverNum, time: new Date(time.getTime() - msBefore), s1: s1, s2: s2, s3: s3 });
+	}
+
+
+	length = binToInt(boolList.splice(0, 5));
+	let fastestLaps: { [key: string]: LiveDriverLap } = {};
+	for (let i = 0; i < length; i++) {
+		let driverNum = binToInt(boolList.splice(0, 7));
+		let s1 = binToInt(boolList.splice(0, 19)) / 1000;
+		let s2 = binToInt(boolList.splice(0, 19)) / 1000;
+		let s3 = binToInt(boolList.splice(0, 19)) / 1000;
+		let fl = s1 + s2 + s3;
+		fastestLaps[driverNum.toString()] = { s1: s1, s2: s2, s3: s3, lapTime: fl, driverNum: driverNum };
+	}
+
+	console.log(fastestLaps);
+
+	const fastestS1 = binToInt(boolList.splice(0, 17)) / 1000;
+	const fastestS2 = binToInt(boolList.splice(0, 17)) / 1000;
+	const fastestS3 = binToInt(boolList.splice(0, 17)) / 1000;
+
+
+
+	// bools.extend(integer(len(list(fastestLaps.keys())), 5))
+	// for driverNum in fastestLaps:
+	//     bools.extend(integer(int(driverNum), 7))
+	//     bools.extend(integer(int(fastestLaps[driverNum].s1 * 1000), 19))
+	//     bools.extend(integer(int(fastestLaps[driverNum].s2 * 1000), 19))
+	//     bools.extend(integer(int(fastestLaps[driverNum].s3 * 1000), 19))
+
+
+	// bools.extend(integer(count, 5))
+	// for driverNum in driverStarts:
+	//     if len(driverStarts[driverNum]) > 0:
+	//         millosecondsBefore = int(start - driverStarts[driverNum][0][0]).total_seconds() * 1000
+	//         bools.extend(integer(driverNum, 7))
+	//         bools.extend(integer(millosecondsBefore, 24))
+	//         bools.append(driverStarts[driverNum][0][1] != -1)
+	//         bools.append(driverStarts[driverNum][0][2] != -1)
+	//         bools.append(driverStarts[driverNum][0][3] != -1)
+
 	let lapNumber = binToInt(boolList.splice(0, 8));
 
 	let trackState = binToInt(boolList.splice(0, 3));
 
-	if (lapNumber != 250) {
-		console.log(`ERROR LAP NUM ${boolList.length}`);
-	}
-	else {
-		console.log(`ERROR LAP NUM NONE ${boolList.length}`);
-	}
-	console.log(lapNumber);
-	console.log(trackState);
-	console.log(boolList.length);
+	let qualiNum = binToInt(boolList.splice(0, 2));
+
+	console.log(qualiNum);
+
+	let nOfDrivers = [20, 15, 10][qualiNum - 1];
 
 	// let marshalSectorsFull: LiveMarshalSectors[] = [];
 
@@ -328,7 +409,9 @@ export async function getLiveData(time: Date, marshalSectorsNum: number, year: S
 	//     bits.extend(integer(telem.gear - 1, 3))
 	//     bits.extend(integer(datetime_to_milliseconds_of_day(telem.time) % (delta * 1000), 12))
 
-	return { telemetry: telem, positions: positions, driverPositions: driverPositions, driverIntervals: driverIntervals, driverSectors: driverSectors, driverTyres: driverTyres, lapNumber: lapNumber, trackState: trackState };
+
+
+	return { telemetry: telem, positions: positions, driverPositions: driverPositions, driverIntervals: driverIntervals, driverSectors: driverSectors, driverTyres: driverTyres, lapNumber: lapNumber, trackState: trackState, driverLiveTiming: driverLiveTiming, fastestLaps: fastestLaps, fastestSectors: { s1: fastestS1, s2: fastestS2, s3: fastestS3 }, driversActive: nOfDrivers };
 }
 
 export interface Pos {
